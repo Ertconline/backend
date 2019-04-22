@@ -1,0 +1,20 @@
+*.bak
+
+# package directories
+node_modules
+jspm_packages
+
+# Serverless directories
+.serverless
+
+# Webpack directories
+.webpack
+
+#
+/.idea
+/.tmp
+/.vscode
+log.txt
+.DS_Store
+config.js
+test.js

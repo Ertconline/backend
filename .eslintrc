@@ -1,0 +1,29 @@
+{
+    "extends": ["standard", "prettier", "prettier/standard"],
+    "plugins": ["prettier", "standard"],
+    "rules": {
+        "prettier/prettier": "warn",
+        "class-methods-use-this": ["off"],
+        "function-paren-newline": "off",
+        "comma-dangle": "off",
+        "object-curly-newline": "off",
+        "object-shorthand": ["error", "properties"],
+        "no-plusplus": "off",
+        "no-tabs": "error",
+        "func-names": ["warn", "as-needed"],
+        "prefer-destructuring": "off",
+        "curly": ["error", "all"],
+        "padding-line-between-statements": [
+            "error",
+            { "blankLine": "always", "prev": ["block-like"], "next": "return" }
+        ]
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
+    "env": {
+        "node": true,
+        "es6": true,
+        "commonjs": true
+    }
+}
