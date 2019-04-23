@@ -9,13 +9,12 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "demux": "^3.1.3",
-        "demux-eos": "^3.1.0",
+        "body-parser": "^1.18.3",
         "eosjs": "^20.0.0-ffffff.0",
         "eosjs-ecc": "^4.0.4",
+        "express": "^4.16.4",
         "mongodb": "^3.1.13",
-        "body-parser": "^1.18.3",
-        "express": "^4.16.4"
+        "node-fetch": "^2.3.0"
     },
     "devDependencies": {
         "eslint": "^5.15.3",

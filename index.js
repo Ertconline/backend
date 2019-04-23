@@ -2,44 +2,17 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const http = require('http')
 const config = require('./config')
+const { sendError, sendResult } = require('./utils')
+const { methods } = require('./methods')
 
 const app = express()
 app.use(bodyParser.json())
 
-const methods = {
-    createNewUser: async params => {
-        if (!params.email) {
-            return { error: { message: 'Invalid email', code: 3 } }
-        }
-    },
-    getBalance: async params => {
-        if (!params.uid) {
-            return { error: { message: 'Invalid uid', code: 4 } }
-        }
-    },
-    validate: async params => {
-        if (!params.coords || !params.amount || !params.uid || !params.validNum || !params.validDate) {
-            return { error: { message: 'All params required', code: 5 } }
-        }
-    },
-    transfer: async params => {
-        if (!params.fromUid || !params.toUid || !params.amount) {
-            return { error: { message: 'All params required', code: 5 } }
-        }
-    },
-}
-
-const sendError = (res, error) => {
-    return res.json({ success: 0, ...error })
-}
-
-const sendResult = (res, result) => {
-    return res.json({ success: 1, result })
-}
-
 app.post('/api', async (req, res) => {
     const { method, params } = req.body
-
+    if (config.debug) {
+        console.log('request', req.body)
+    }
     if (!methods[method]) {
         return sendError(res, { message: 'Invalid method', code: 1 })
     }

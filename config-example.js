@@ -13,5 +13,6 @@ module.exports = {
     api: {
         ip: '0.0.0.0',
         port: 3100,
+        faucetName: 'faucet',
     },
 }
