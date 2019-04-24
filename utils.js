@@ -35,4 +35,14 @@ const sendResult = (res, result) => {
     return res.json(response)
 }
 
-module.exports = { parseTokenString, generateName, sendError, sendResult }
+const prepareCoords = coords => {
+    const newCoords = coords.map(cs => {
+        const coords = {}
+        coords.latitude = parseInt(cs.x.replace(',', ''))
+        coords.longitude = parseInt(cs.y.replace(',', ''))
+        return coords
+    })
+    return newCoords
+}
+
+module.exports = { parseTokenString, generateName, sendError, sendResult, prepareCoords }

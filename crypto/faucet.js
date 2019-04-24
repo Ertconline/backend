@@ -7,7 +7,7 @@ const createEOSAccount = async pubKey => {
     const activeKey = pubKey
     const ownerKey = pubKey
     // TODO check pubkey
-    // signup transaction + facet giveaway tx
+    // signup transaction
     const result = await api.transact(
         {
             actions: [
@@ -26,8 +26,10 @@ const createEOSAccount = async pubKey => {
         },
         { blocksBehind: 3, expireSeconds: 30 },
     )
-    // todo check result
-    // console.log({ txresult: result, nick })
+    if (config.debug) {
+        console.log('createEOSAccount', { uid, result })
+    }
+
     return { uid }
 }
 

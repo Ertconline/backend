@@ -7,9 +7,13 @@ const {
     approveValidation,
     issueTokens,
     createTx,
+    getValidation,
+    getTokens,
 } = require('./crypto')
 
 const { checkEmail, saveUser, getKeys } = require('./db')
+const config = require('./config')
+const { prepareCoords } = require('./utils')
 
 const methods = {
     createNewUser: async params => {
@@ -44,21 +48,69 @@ const methods = {
         if (!params.coords || !params.amount || !params.uid || !params.validNum || !params.validDate) {
             return { error: { message: 'All params required', code: 5 } }
         }
-        const keys = await getKeys(params.uid)
-        if (!keys) {
-            return { error: { message: 'Invalid uid', code: 4 } }
-        }
-        const api = createApi(keys)
+
         try {
-            const { txid } = await createValidation(api, params.fromUid, params.toUid, params.amount)
-            if (txid) {
-                return { result: { txid } }
+            const keys = await getKeys(params.uid)
+            if (!keys) {
+                return { error: { message: 'Invalid uid', code: 4 } }
             }
-            const { validationId } = await approveValidation(api, params.fromUid, params.toUid, params.amount)
-            const result = await issueTokens(api, params.fromUid, params.toUid, params.amount)
+            const api = createApi(keys.privateKey)
+            const AdminApi = createApi(config.eos.adminKeyProvider)
+            const newValidation = {
+                coords: prepareCoords(params.coords),
+                amount: parseInt(params.amount),
+                creator: params.uid,
+                id: parseInt(params.validNum),
+            }
+
+            const validation = await getValidation(newValidation.id)
+
+            if (validation) {
+                if (validation.state === 1) {
+                    const tokens = await getTokens(newValidation.id)
+                    if (!tokens) {
+                        const result = await issueTokens(AdminApi, newValidation.id, newValidation.coords)
+                        if (result) {
+                            return { result: true }
+                        }
+                    } else {
+                        return { result: true }
+                    }
+                } else {
+                    const txId = await approveValidation(AdminApi, newValidation.id)
+                    if (txId) {
+                        const result = await issueTokens(AdminApi, newValidation.id, newValidation.coords)
+                        if (result) {
+                            return { result: true }
+                        }
+                    } else {
+                        return {
+                            error: {
+                                message: 'internal error, try again later',
+                                code: 7,
+                            },
+                        }
+                    }
+                }
+            }
+
+            const valTxId = await createValidation(api, newValidation)
+            if (!valTxId) {
+                return { error: { message: 'internal error, try again later', code: 7 } }
+            }
+
+            const txId = await approveValidation(AdminApi, newValidation.id)
+            if (txId) {
+                const result = await issueTokens(AdminApi, newValidation.id, newValidation.coords)
+                if (result) {
+                    return { result: true }
+                }
+            }
+
+            return { error: { message: 'internal error, try again later', code: 7 } }
         } catch (err) {
             console.log('create validation error', err)
-            return { error: { message: 'internal error, try later', code: 7 } }
+            return { error: { message: 'internal error, try again later', code: 7 } }
         }
     },
     transfer: async params => {
@@ -71,9 +123,13 @@ const methods = {
             return { error: { message: 'Invalid uid', code: 4 } }
         }
 
-        const api = createApi(keys)
+        const api = createApi(keys.privateKey)
         try {
-            const { txid } = await createTx(api, params.fromUid, params.toUid, params.amount)
+            const txid = await createTx(api, {
+                from: params.fromUid,
+                to: params.toUid,
+                amount: parseInt(params.amount),
+            })
             if (txid) {
                 return { result: { txid } }
             }

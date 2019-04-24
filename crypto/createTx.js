@@ -1,19 +1,28 @@
-const { api } = require('./cryptoApi')
+const config = require('../config')
 
-const createTx = async (from, to, amount, memo = '', symbol = 'ERTC') => {
+const createTx = async (api, data) => {
+    const pack = {
+        from: data.from,
+        to: data.to,
+        quantity: `${data.amount} ERTC`,
+        memo: '',
+    }
     const tx = {
         actions: [
             {
                 account: 'ertc.nft',
                 name: 'transfer',
-                authorization: [{ actor: from, permission: 'active' }],
-                data: { from, to, quantity: `${amount} ${symbol}`, memo },
+                authorization: [{ actor: pack.from, permission: 'active' }],
+                data: pack,
             },
         ],
     }
     const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
-    // console.log('TX:', tx)
-    return result.serializedTransaction
+    if (config.debug) {
+        console.log('createTx:', { tx, result })
+    }
+
+    return result.transaction_id
 }
 
 module.exports = { createTx }
