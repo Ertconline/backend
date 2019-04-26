@@ -13,7 +13,8 @@ const {
 
 const { checkEmail, saveUser, getKeys } = require('./db')
 const config = require('./config')
-const { prepareCoords } = require('./utils')
+const { prepareCoords, prepareCoordsArray, preparePoints } = require('./utils')
+const { getPoints } = require('./points')
 
 const methods = {
     createNewUser: async params => {
@@ -62,24 +63,16 @@ const methods = {
                 creator: params.uid,
                 id: parseInt(params.validNum),
             }
-
+            const coordsArray = prepareCoordsArray(params.coords)
             const validation = await getValidation(newValidation.id)
+            const points = getPoints(coordsArray, newValidation.amount)
+            const preparedPoints = preparePoints(points)
 
             if (validation) {
-                if (validation.state === 1) {
-                    const tokens = await getTokens(newValidation.id)
-                    if (!tokens) {
-                        const result = await issueTokens(AdminApi, newValidation.id, newValidation.coords)
-                        if (result) {
-                            return { result: true }
-                        }
-                    } else {
-                        return { result: true }
-                    }
-                } else {
+                if (validation.state === 0) {
                     const txId = await approveValidation(AdminApi, newValidation.id)
                     if (txId) {
-                        const result = await issueTokens(AdminApi, newValidation.id, newValidation.coords)
+                        const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
                         if (result) {
                             return { result: true }
                         }
@@ -91,6 +84,18 @@ const methods = {
                             },
                         }
                     }
+                } else if (validation.state === 1) {
+                    const tokens = await getTokens(newValidation.id)
+                    if (!tokens) {
+                        const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
+                        if (result) {
+                            return { result: true }
+                        }
+                    } else {
+                        return { result: true }
+                    }
+                } else if (validation.state === 2) {
+                    return { result: true }
                 }
             }
 
@@ -101,7 +106,7 @@ const methods = {
 
             const txId = await approveValidation(AdminApi, newValidation.id)
             if (txId) {
-                const result = await issueTokens(AdminApi, newValidation.id, newValidation.coords)
+                const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
                 if (result) {
                     return { result: true }
                 }

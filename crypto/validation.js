@@ -60,7 +60,7 @@ const getValidation = async validId => {
         console.log('getValidation', { request, resp })
     }
 
-    return resp ? resp[0] : false
+    return resp.rows ? resp.rows[0] : false
 }
 
 module.exports = { createValidation, approveValidation, getValidation }

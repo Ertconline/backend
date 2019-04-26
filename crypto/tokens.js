@@ -17,11 +17,14 @@ const getTokens = async validId => {
         console.log('getTokens', { resp })
     }
 
-    return resp ? resp[0] : false
+    return resp.rows ? resp.rows[0] : false
 }
 
 // cleos push action ertc issue '[0, [[1,1], [2,1], [3,1]]]' -p ertc
 const issueTokens = async (api, id, points) => {
+    if (config.debug) {
+        console.log('issueTokens input', { id, points })
+    }
     const pack = { id, points }
     const tx = {
         actions: [

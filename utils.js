@@ -1,4 +1,5 @@
 const config = require('./config')
+const Decimal = require('decimal.js')
 
 const parseTokenString = tokenString => {
     const [amountString, symbol] = tokenString.split(' ').map(t => t.trim())
@@ -35,14 +36,52 @@ const sendResult = (res, result) => {
     return res.json(response)
 }
 
+const preparePoint = (point, precision = 8) => {
+    let newPoint = new Decimal(point.toString().replace(',', '.'))
+    newPoint = newPoint
+        .toFixed(precision)
+        .toString()
+        .replace('.', '')
+    newPoint = parseInt(newPoint)
+    return newPoint
+}
+
 const prepareCoords = coords => {
     const newCoords = coords.map(cs => {
         const coords = {}
-        coords.latitude = parseInt(cs.x.replace(',', ''))
-        coords.longitude = parseInt(cs.y.replace(',', ''))
+        coords.latitude = preparePoint(cs.x)
+        coords.longitude = preparePoint(cs.y)
         return coords
     })
     return newCoords
 }
 
-module.exports = { parseTokenString, generateName, sendError, sendResult, prepareCoords }
+const preparePoints = points => {
+    const newPoints = points.map(cs => {
+        const coords = {}
+        coords.latitude = preparePoint(cs[0])
+        coords.longitude = preparePoint(cs[1])
+        return coords
+    })
+    return newPoints
+}
+
+const prepareCoordsArray = coords => {
+    const newCoords = coords.map(cs => {
+        const coords = []
+        coords.push(cs.x)
+        coords.push(cs.y)
+        return coords
+    })
+    return newCoords
+}
+
+module.exports = {
+    parseTokenString,
+    generateName,
+    sendError,
+    sendResult,
+    prepareCoords,
+    prepareCoordsArray,
+    preparePoints,
+}

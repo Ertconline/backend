@@ -9,12 +9,15 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@turf/turf": "^5.1.6",
         "body-parser": "^1.18.3",
+        "decimal.js": "^10.1.1",
         "eosjs": "^20.0.0-ffffff.0",
         "eosjs-ecc": "^4.0.4",
         "express": "^4.16.4",
         "mongodb": "^3.1.13",
-        "node-fetch": "^2.3.0"
+        "node-fetch": "^2.3.0",
+        "temp-turf-rectangle-grid": "^6.0.2"
     },
     "devDependencies": {
         "eslint": "^5.15.3",

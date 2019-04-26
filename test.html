@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title></title>
+        <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+        <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js"></script>
+        <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css" rel="stylesheet" />
+        <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            #map {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="map"></div>
+        <script>
+            mapboxgl.accessToken = 'pk.eyJ1IjoibW9yZ2FuaGVybG9ja2VyIiwiYSI6Ii1zLU4xOWMifQ.FubD68OEerk74AYCLduMZQ'
+            var map = new mapboxgl.Map({
+                container: 'map', // container id
+                style: 'mapbox://styles/mapbox/light-v10', // stylesheet location
+                center: [-84.5, 38.05], // starting position
+                zoom: 11, // starting zoom
+            })
+
+            var original_coords = [
+                [-84.539487, 38.072916],
+                [-84.498816, 38.060791],
+                [-84.472941, 38.022564],
+                [-84.512283, 38.018918],
+            ]
+
+            // var polygon = turf.polygon([original_coords], { name: 'poly1' });
+            // var polygon = turf.polygon([[[-5, 52], [-4, 56], [-2, 51], [-7, 54], [-5, 52]]], { name: 'poly1' });
+            var features = turf.featureCollection([
+                turf.point([-84.539487, 38.072916], { name: 'Location A' }),
+                turf.point([-84.498816, 38.060791], { name: 'Location B' }),
+                turf.point([-84.472941, 38.022564], { name: 'Location C' }),
+                turf.point([-84.512283, 38.018918], { name: 'Location D' }),
+            ])
+
+            var poly = turf.polygon([[...original_coords, [-84.539487, 38.072916]]])
+            var enveloped = turf.envelope(features)
+            var center = turf.centerOfMass(enveloped)
+            var bbox = turf.bbox(enveloped)
+            var bbox = turf.square(bbox)
+            var pointsCount = 4
+            var precision = 8
+            var line = turf.lineString([[bbox[0], bbox[1]], [bbox[2], bbox[1]]])
+            var div = pointsCount % 2 === 0 ? pointsCount : pointsCount - 1
+            var length = turf.length(line)
+            // var squares = turf.squareGrid(bbox, length / div)
+            // var centers = turf.featureCollection(squares.features.map(f => turf.centerOfMass(f)))
+
+            var from = turf.point([bbox[0], bbox[1]])
+            var to = turf.point([bbox[2], bbox[1]])
+
+            var distance = turf.distance(from, to)
+            // console.log({ length, div, distance })
+            var squares = JSON.parse(
+                '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.539487,38.018918],[-84.539487,38.045917],[-84.52998042857142,38.045917],[-84.52998042857142,38.018918],[-84.539487,38.018918]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.539487,38.045917],[-84.539487,38.072916000000006],[-84.52998042857142,38.072916000000006],[-84.52998042857142,38.045917],[-84.539487,38.045917]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.52998042857142,38.018918],[-84.52998042857142,38.045917],[-84.52047385714285,38.045917],[-84.52047385714285,38.018918],[-84.52998042857142,38.018918]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.52998042857142,38.045917],[-84.52998042857142,38.072916000000006],[-84.52047385714285,38.072916000000006],[-84.52047385714285,38.045917],[-84.52998042857142,38.045917]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.52047385714285,38.018918],[-84.52047385714285,38.045917],[-84.51096728571427,38.045917],[-84.51096728571427,38.018918],[-84.52047385714285,38.018918]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.52047385714285,38.045917],[-84.52047385714285,38.072916000000006],[-84.51096728571427,38.072916000000006],[-84.51096728571427,38.045917],[-84.52047385714285,38.045917]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.51096728571427,38.018918],[-84.51096728571427,38.045917],[-84.5014607142857,38.045917],[-84.5014607142857,38.018918],[-84.51096728571427,38.018918]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.51096728571427,38.045917],[-84.51096728571427,38.072916000000006],[-84.5014607142857,38.072916000000006],[-84.5014607142857,38.045917],[-84.51096728571427,38.045917]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.5014607142857,38.018918],[-84.5014607142857,38.045917],[-84.49195414285713,38.045917],[-84.49195414285713,38.018918],[-84.5014607142857,38.018918]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.5014607142857,38.045917],[-84.5014607142857,38.072916000000006],[-84.49195414285713,38.072916000000006],[-84.49195414285713,38.045917],[-84.5014607142857,38.045917]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.49195414285713,38.018918],[-84.49195414285713,38.045917],[-84.48244757142855,38.045917],[-84.48244757142855,38.018918],[-84.49195414285713,38.018918]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.49195414285713,38.045917],[-84.49195414285713,38.072916000000006],[-84.48244757142855,38.072916000000006],[-84.48244757142855,38.045917],[-84.49195414285713,38.045917]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.48244757142855,38.018918],[-84.48244757142855,38.045917],[-84.47294099999998,38.045917],[-84.47294099999998,38.018918],[-84.48244757142855,38.018918]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[-84.48244757142855,38.045917],[-84.48244757142855,38.072916000000006],[-84.47294099999998,38.072916000000006],[-84.47294099999998,38.045917],[-84.48244757142855,38.045917]]]}}]}',
+            )
+            var centers = JSON.parse(
+                '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.53473371428571,38.0324175]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.53473371428571,38.059416500000005]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.52522714285713,38.0324175]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.52522714285713,38.059416500000005]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.51572057142856,38.0324175]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.51572057142856,38.059416500000005]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.50621399999999,38.0324175]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.50621399999999,38.059416500000005]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.49670742857141,38.0324175]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.49670742857141,38.059416500000005]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.48720085714284,38.0324175]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.48720085714284,38.059416500000005]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.47769428571426,38.0324175]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[-84.47769428571426,38.059416500000005]}}]}',
+            )
+            var original_points = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: { Name: 'VA Medical Center -- Leestown Division', Address: '2250 Leestown Rd' },
+                        geometry: { type: 'Point', coordinates: [-84.539487, 38.072916] },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: { Name: 'Eastern State Hospital', Address: '627 W Fourth St' },
+                        geometry: { type: 'Point', coordinates: [-84.498816, 38.060791] },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: { Name: 'Shriners Hospital for Children', Address: '1900 Richmond Rd' },
+                        geometry: { type: 'Point', coordinates: [-84.472941, 38.022564] },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: { Name: 'Central Baptist Hospital', Address: '1740 Nicholasville Rd' },
+                        geometry: { type: 'Point', coordinates: [-84.512283, 38.018918] },
+                    },
+                ],
+            }
+
+            map.on('load', function() {
+                map.addLayer({
+                    id: 'hospitals',
+                    type: 'symbol',
+                    source: {
+                        type: 'geojson',
+                        data: original_points,
+                    },
+                    layout: {
+                        'icon-image': 'hospital-15',
+                    },
+                    paint: {},
+                })
+                map.addLayer({
+                    id: 'hospitals_env',
+                    type: 'fill',
+                    paint: {
+                        'fill-opacity': 0.3,
+                    },
+                    source: {
+                        type: 'geojson',
+                        data: enveloped,
+                    },
+                })
+                map.addLayer({
+                    id: 'splits',
+                    type: 'fill',
+                    paint: {
+                        'fill-color': '#fbc',
+                        'fill-opacity': 0.3,
+                    },
+                    source: {
+                        type: 'geojson',
+                        data: squares,
+                    },
+                })
+                map.addLayer({
+                    id: 'cbb',
+                    type: 'symbol',
+                    layout: {
+                        'icon-image': 'hospital-15',
+                    },
+                    source: {
+                        type: 'geojson',
+                        data: center,
+                    },
+                })
+                map.addLayer({
+                    id: 'csplits',
+                    type: 'symbol',
+                    layout: {
+                        'icon-image': 'hospital-15',
+                    },
+                    source: {
+                        type: 'geojson',
+                        data: centers,
+                    },
+                })
+
+                map.addSource('nearest-hospital', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: [],
+                    },
+                })
+            })
+        </script>
+    </body>
+</html>
