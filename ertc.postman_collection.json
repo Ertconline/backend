@@ -1,0 +1,138 @@
+{
+	"info": {
+		"name": "ertc",
+		"_postman_id": "489ff7ac-929d-0f5e-5a14-743ae627fada",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "create user",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"method\": \"createNewUser\", \"params\": {\"email\": \"user9@gmail.com\"}}"
+				},
+				"url": {
+					"raw": "http://95.214.63.254:3100/api",
+					"protocol": "http",
+					"host": [
+						"95",
+						"214",
+						"63",
+						"254"
+					],
+					"port": "3100",
+					"path": [
+						"api"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "validate",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"method\": \"validate\",\n\t\"params\": {\n\"coords\": [\n       {\"x\": \"-84.539487\", \"y\": \"138.072916\"},\n        {\"x\": \"-84.498816\", \"y\": \"18.060791\"},\n        {\"x\": \"-84.472941\", \"y\": \"18.022564\"},\n        {\"x\": \"-84.512283\", \"y\": \"123.018918\"}\n],\n\"amount\": \"15\",\n\"uid\": \"e.1yqmuzx45m\",\n\"validNum\": \"12246\",\n\"validDate\": \"01-12-19 10:30\"\n}\n}\n"
+				},
+				"url": {
+					"raw": "http://95.214.63.254:3100/api",
+					"protocol": "http",
+					"host": [
+						"95",
+						"214",
+						"63",
+						"254"
+					],
+					"port": "3100",
+					"path": [
+						"api"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get balance",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"method\": \"getBalance\", \"params\": {\"uid\": \"e.1yqmuzx45m\"}}"
+				},
+				"url": {
+					"raw": "http://95.214.63.254:3100/api",
+					"protocol": "http",
+					"host": [
+						"95",
+						"214",
+						"63",
+						"254"
+					],
+					"port": "3100",
+					"path": [
+						"api"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "transfer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"method\": \"transfer\",\n\t\"params\": {\n\"amount\": \"1\",\n\"fromUid\": \"e.1yqmuzx45m\",\n\"toUid\": \"faucet\"\n}\n}\n"
+				},
+				"url": {
+					"raw": "http://95.214.63.254:3100/api",
+					"protocol": "http",
+					"host": [
+						"95",
+						"214",
+						"63",
+						"254"
+					],
+					"port": "3100",
+					"path": [
+						"api"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
