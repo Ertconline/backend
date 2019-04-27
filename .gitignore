@@ -17,4 +17,4 @@ jspm_packages
 log.txt
 .DS_Store
 config.js
-test.js
+/users/*

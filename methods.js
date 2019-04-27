@@ -35,7 +35,7 @@ const methods = {
             }
         } catch (err) {
             console.log('create acc error', err)
-            return { error: { message: 'internal error, try later', code: 7 } }
+            return { error: { message: 'internal error, try again later', code: 7 } }
         }
     },
     getBalance: async params => {
@@ -140,7 +140,7 @@ const methods = {
             }
         } catch (err) {
             console.log('create tx error', err)
-            return { error: { message: 'internal error, try later', code: 7 } }
+            return { error: { message: 'internal error, try again later', code: 7 } }
         }
     },
 }
