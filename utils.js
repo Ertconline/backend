@@ -23,7 +23,7 @@ const sendError = (res, error) => {
     if (config.debug) {
         console.log('response', response)
     }
-
+    res.status(500)
     return res.json(response)
 }
 
