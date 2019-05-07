@@ -124,6 +124,11 @@ const methods = {
             if (config.debug) {
                 console.log('validation created, try approve')
             }
+            await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve()
+                }, 1500)
+            })
             const txId = await approveValidation(AdminApi, newValidation.id)
             if (txId) {
                 if (config.debug) {
