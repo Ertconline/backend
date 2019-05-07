@@ -77,6 +77,9 @@ const methods = {
             const preparedPoints = preparePoints(points)
 
             if (validation) {
+                if (config.debug) {
+                    console.log('validation Found', { validation })
+                }
                 if (validation.state === 0) {
                     const txId = await approveValidation(AdminApi, newValidation.id)
                     if (txId) {
