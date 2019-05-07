@@ -9,7 +9,7 @@ const getPoints = (originalCoords, pointsCount, precision = 8) => {
         console.log('getPoints input', { originalCoords, pointsCount, precision })
     }
 
-    const points = []
+    let points = []
     const features = turf.featureCollection([...originalCoords.map(coord => turf.point(coord))])
 
     const enveloped = turf.envelope(features)
@@ -40,9 +40,14 @@ const getPoints = (originalCoords, pointsCount, precision = 8) => {
     if (!isEven) {
         points.push(center.geometry.coordinates.map(coord => coord.toPrecision(precision)))
     }
+    points.push(enveloped.geometry.coordinates[0].map(coord => coord.map(c => c.toPrecision(precision))))
 
     if (config.debug) {
         console.log('getPoints output', { l: points.length, points })
+    }
+    points = points.slice(0, pointsCount)
+    if (points.length !== pointsCount) {
+        throw new Error('cant create enough points')
     }
 
     return points
