@@ -109,14 +109,21 @@ const methods = {
                     return { result: true }
                 }
             }
-
+            if (config.debug) {
+                console.log('validation not found')
+            }
             const valTxId = await createValidation(api, newValidation)
             if (!valTxId) {
                 return { error: { message: 'internal error, try again later', code: 7 } }
             }
-
+            if (config.debug) {
+                console.log('validation created, try approve')
+            }
             const txId = await approveValidation(AdminApi, newValidation.id)
             if (txId) {
+                if (config.debug) {
+                    console.log('validation approved, try issue')
+                }
                 const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
                 if (result) {
                     return { result: true }
