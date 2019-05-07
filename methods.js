@@ -13,7 +13,7 @@ const {
 
 const { checkEmail, saveUser, getKeys } = require('./db')
 const config = require('./config')
-const { prepareCoords, prepareCoordsArray, preparePoints } = require('./utils')
+const { validateCoords, prepareCoords, prepareCoordsArray, preparePoints } = require('./utils')
 const { getPoints } = require('./points')
 
 const methods = {
@@ -48,6 +48,14 @@ const methods = {
     validate: async params => {
         if (!params.coords || !params.amount || !params.uid || !params.validNum || !params.validDate) {
             return { error: { message: 'All params required', code: 5 } }
+        }
+
+        if (params.coords.length < 3) {
+            return { error: { message: 'coords must be 3 or more', code: 8 } }
+        }
+
+        if (!validateCoords(params.coords)) {
+            return { error: { message: 'coords must formated like {"x": "9.99", "y":"-9.99"}', code: 8 } }
         }
 
         try {

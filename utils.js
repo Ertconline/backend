@@ -76,6 +76,25 @@ const prepareCoordsArray = coords => {
     return newCoords
 }
 
+const isValidCoord = coord => {
+    return true
+}
+
+const validateCoords = coords => {
+    const newCoords = coords
+        .map(cs => {
+            const exists = cs.x && cs.y
+            const valid = isValidCoord(cs.x) && isValidCoord(cs.y)
+            if (exists && valid) {
+                return 1
+            } else {
+                return 0
+            }
+        })
+        .filter(c => c)
+    return newCoords.length === coords.length
+}
+
 module.exports = {
     parseTokenString,
     generateName,
@@ -84,4 +103,5 @@ module.exports = {
     prepareCoords,
     prepareCoordsArray,
     preparePoints,
+    validateCoords,
 }
