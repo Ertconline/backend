@@ -42,12 +42,12 @@ const getPoints = (originalCoords, pointsCount, precision = 8) => {
     }
     points.push(enveloped.geometry.coordinates[0].map(coord => coord.map(c => c.toPrecision(precision))))
 
-    if (config.debug) {
-        console.log('getPoints output', { l: points.length, points })
-    }
-    points = points.slice(0, pointsCount - 1)
+    points = points.slice(0, pointsCount)
     if (points.length !== pointsCount) {
         throw new Error('cant create enough points')
+    }
+    if (config.debug) {
+        console.log('getPoints output', { l: points.length, points })
     }
 
     return points
