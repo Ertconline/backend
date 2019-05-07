@@ -45,7 +45,7 @@ const getPoints = (originalCoords, pointsCount, precision = 8) => {
     if (config.debug) {
         console.log('getPoints output', { l: points.length, points })
     }
-    points = points.slice(0, pointsCount)
+    points = points.slice(0, pointsCount - 1)
     if (points.length !== pointsCount) {
         throw new Error('cant create enough points')
     }
