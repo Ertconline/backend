@@ -83,6 +83,11 @@ const methods = {
                 if (validation.state === 0) {
                     const txId = await approveValidation(AdminApi, newValidation.id)
                     if (txId) {
+                        await new Promise((resolve, reject) => {
+                            setTimeout(() => {
+                                resolve()
+                            }, 1500)
+                        })
                         const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
                         if (result) {
                             return { result: true }
@@ -124,6 +129,11 @@ const methods = {
                 if (config.debug) {
                     console.log('validation approved, try issue')
                 }
+                await new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        resolve()
+                    }, 1500)
+                })
                 const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
                 if (result) {
                     return { result: true }
