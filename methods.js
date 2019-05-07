@@ -148,7 +148,7 @@ const methods = {
             return { error: { message: 'internal error, try again later', code: 7 } }
         } catch (err) {
             console.log('create validation error', err)
-            return { error: { message: 'internal error, try again later', code: 7 } }
+            return { error: { message: err.json.error.what, code: 7 } }
         }
     },
     transfer: async params => {
