@@ -55,7 +55,7 @@ const methods = {
         }
 
         if (!validateCoords(params.coords)) {
-            return { error: { message: 'coords must formated like {"x": "9.99", "y":"-9.99"}', code: 8 } }
+            return { error: { message: 'coords must formated like {"x": "9.99", "y":"-9.99"}', code: 9 } }
         }
 
         try {
