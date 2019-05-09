@@ -71,9 +71,19 @@ const methods = {
                 creator: params.uid,
                 id: parseInt(params.validNum),
             }
+
+            if (newValidation.amount < 1) {
+                return { error: { message: 'amount must be greater than 0', code: 10 } }
+            }
+
             const coordsArray = prepareCoordsArray(params.coords)
             const validation = await getValidation(newValidation.id)
             const points = getPoints(coordsArray, newValidation.amount)
+
+            if (!points.length) {
+                return { error: { message: 'cant create points', code: 11 } }
+            }
+
             const preparedPoints = preparePoints(points)
 
             if (validation) {
@@ -148,6 +158,10 @@ const methods = {
             return { error: { message: 'internal error, try again later', code: 7 } }
         } catch (err) {
             console.log('create validation error', err)
+            if (err.json.error.what === 'token coordinates are not unique') {
+                return { error: { message: 'not unique coordinates', code: 12 } }
+            }
+
             return { error: { message: err.json.error.what, code: 7 } }
         }
     },
