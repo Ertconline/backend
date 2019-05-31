@@ -33,7 +33,7 @@ app.post('/api', async (req, res) => {
     return sendResult(res, result.result)
 })
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
     console.log('Error handler', err)
     if (err instanceof IpDeniedError) {
         return sendError(res, { error: { message: 'this ip not allowed', code: 13 } })
