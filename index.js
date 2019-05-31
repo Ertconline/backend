@@ -1,4 +1,5 @@
 const express = require('express')
+const ipfilter = require('express-ipfilter').IpFilter
 const bodyParser = require('body-parser')
 const http = require('http')
 const config = require('./config')
@@ -6,6 +7,7 @@ const { sendError, sendResult } = require('./utils')
 const { methods } = require('./methods')
 
 const app = express()
+app.use(ipfilter(config.ips), { mode: 'allow' })
 app.use(bodyParser.json())
 
 app.post('/api', async (req, res) => {
