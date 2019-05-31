@@ -1,5 +1,6 @@
 const express = require('express')
 const ipfilter = require('express-ipfilter').IpFilter
+const IpDeniedError = require('express-ipfilter').IpDeniedError
 const bodyParser = require('body-parser')
 const http = require('http')
 const config = require('./config')
@@ -30,6 +31,15 @@ app.post('/api', async (req, res) => {
     }
 
     return sendResult(res, result.result)
+})
+
+app.use((err, req, res) => {
+    console.log('Error handler', err)
+    if (err instanceof IpDeniedError) {
+        return sendError(res, { error: { message: 'this ip not allowed', code: 13 } })
+    } else {
+        return sendError(res, { error: { message: 'internal error, try again later', code: 7 } })
+    }
 })
 
 const server = http.createServer(app)
