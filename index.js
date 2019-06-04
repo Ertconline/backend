@@ -8,7 +8,9 @@ const { sendError, sendResult } = require('./utils')
 const { methods } = require('./methods')
 
 const app = express()
-app.use(ipfilter(config.ips, { mode: 'allow' }))
+if (config.ips && config.ips.length) {
+    app.use(ipfilter(config.ips, { mode: 'allow' }))
+}
 app.use(bodyParser.json())
 
 app.post('/api', async (req, res) => {
@@ -36,9 +38,9 @@ app.post('/api', async (req, res) => {
 app.use((err, req, res, next) => {
     console.log('Error handler', err)
     if (err instanceof IpDeniedError) {
-        return sendError(res, { error: { message: 'this ip not allowed', code: 13 } })
+        return sendError(res, { message: 'this ip not allowed', code: 13 })
     } else {
-        return sendError(res, { error: { message: 'internal error, try again later', code: 7 } })
+        return sendError(res, { message: 'internal error, try again later', code: 7 })
     }
 })
 
