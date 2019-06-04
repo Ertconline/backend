@@ -90,6 +90,19 @@ const methods = {
                 if (config.debug) {
                     console.log('validation Found', { validation })
                 }
+                if (newValidation.amount !== validation.amount) {
+                    return {
+                        error: {
+                            message:
+                                'Validation already created, but amounts not equal, validation amount: [' +
+                                validation.amount +
+                                '] new validation amount [' +
+                                newValidation.amount +
+                                ']',
+                            code: 14,
+                        },
+                    }
+                }
                 if (validation.state === 0) {
                     const txId = await approveValidation(AdminApi, newValidation.id)
                     if (txId) {
