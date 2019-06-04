@@ -171,11 +171,15 @@ const methods = {
             return { error: { message: 'internal error, try again later', code: 7 } }
         } catch (err) {
             console.log('create validation error', err)
-            if (err.json.error.what === 'token coordinates are not unique') {
-                return { error: { message: 'not unique coordinates', code: 12 } }
+            if (err.json && err.json.error && err.json.error.what) {
+                if (err.json.error.what === 'token coordinates are not unique') {
+                    return { error: { message: 'not unique coordinates', code: 12 } }
+                }
+
+                return { error: { message: err.json.error.what, code: 7 } }
             }
 
-            return { error: { message: err.json.error.what, code: 7 } }
+            return { error: { message: err.message, code: 7 } }
         }
     },
     transfer: async params => {
