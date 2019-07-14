@@ -1,10 +1,9 @@
 const { rpc } = require('./cryptoApi')
-const util = require('util')
-util.inspect.defaultOptions.depth = null
-const config = require('../config')
+const { debug } = require('../utils')
 
 // cleos push action ertc create '{"creator": "test1", "id": 0, "coords": [[1, 1], [1, 2], [4, 1], [4, 2]], "amount": 3}' -p test1
 const createValidation = async (api, validation) => {
+    // validation.coords = validation.coords.map(coord => [coord.latitude + '', coord.longitude + ''])
     const tx = {
         actions: [
             {
@@ -15,10 +14,9 @@ const createValidation = async (api, validation) => {
             },
         ],
     }
+    debug('createValidation', { tx })
     const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
-    if (config.debug) {
-        console.log('createValidation', { tx, result })
-    }
+    debug('createValidation', { result })
 
     return result
 }
@@ -36,12 +34,82 @@ const approveValidation = async (api, validId) => {
             },
         ],
     }
+    debug('approveValidation', { tx })
     const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
-    if (config.debug) {
-        console.log('approveValidation', { tx, result })
-    }
+    debug('approveValidation', { result })
 
     return result
+}
+
+const preIssue = async (api, validId) => {
+    const pack = { id: validId }
+    const tx = {
+        actions: [
+            {
+                account: 'ertc',
+                name: 'preissue',
+                authorization: [{ actor: 'ertc', permission: 'active' }],
+                data: pack,
+            },
+        ],
+    }
+    debug('preIssue', { tx })
+    const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
+    debug('preIssue', { result })
+
+    return result
+}
+
+const payout = async (api, validId) => {
+    const pack = { id: validId }
+    const tx = {
+        actions: [
+            {
+                account: 'ertc',
+                name: 'payout',
+                authorization: [{ actor: 'ertc', permission: 'active' }],
+                data: pack,
+            },
+        ],
+    }
+    debug('payout', { tx })
+    const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
+    debug('payout', { result })
+
+    return result
+}
+
+const cancel = async (api, validId) => {
+    const pack = { id: validId }
+    const tx = {
+        actions: [
+            {
+                account: 'ertc',
+                name: 'cancel',
+                authorization: [{ actor: 'ertc', permission: 'active' }],
+                data: pack,
+            },
+        ],
+    }
+    debug('cancel', { tx })
+    const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
+    debug('cancel', { result })
+
+    return result
+}
+
+const getIssueState = async () => {
+    const request = {
+        json: true,
+        code: 'ertc',
+        scope: 'ertc',
+        table: 'currentstate',
+    }
+    debug('getIssueState', { request })
+    const resp = await rpc.get_table_rows(request)
+    debug('getIssueState', { resp })
+
+    return resp.rows ? resp.rows[0] : false
 }
 
 // cleos get table ertc ertc validation -L8 -U8 -l1
@@ -55,12 +123,11 @@ const getValidation = async validId => {
         upper_bound: validId,
         limit: 1,
     }
+    debug('getValidation', { request })
     const resp = await rpc.get_table_rows(request)
-    if (config.debug) {
-        console.log('getValidation', { request, resp })
-    }
+    debug('getValidation', { resp })
 
     return resp.rows ? resp.rows[0] : false
 }
 
-module.exports = { createValidation, approveValidation, getValidation }
+module.exports = { createValidation, approveValidation, getValidation, getIssueState, preIssue, payout, cancel }

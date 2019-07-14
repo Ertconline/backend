@@ -1,5 +1,7 @@
 const config = require('./config')
 const Decimal = require('decimal.js')
+const util = require('util')
+util.inspect.defaultOptions.depth = null
 
 const parseTokenString = tokenString => {
     const [amountString, symbol] = tokenString.split(' ').map(t => t.trim())
@@ -95,6 +97,37 @@ const validateCoords = coords => {
     return newCoords.length === coords.length
 }
 
+const debug = (...args) => {
+    if (config.debug) {
+        console.log(...args)
+    }
+}
+
+const chunk = (arr, len) => {
+    const chunks = []
+    let i = 0
+    const n = arr.length
+
+    while (i < n) {
+        chunks.push(arr.slice(i, (i += len)))
+    }
+
+    return chunks
+}
+
+const bcError = err => {
+    if (err.json && err.json.error && err.json.error.details && err.json.error.details.length) {
+        return { error: { message: err.json.error.details[0].message, code: 7 } }
+    }
+    if (err.json && err.json.error && err.json.error.what) {
+        if (err.json.error.what === 'token coordinates are not unique') {
+            return { error: { message: 'not unique coordinates', code: 12 } }
+        }
+
+        return { error: { message: err.json.error.what, code: 7 } }
+    }
+}
+
 module.exports = {
     parseTokenString,
     generateName,
@@ -104,4 +137,7 @@ module.exports = {
     prepareCoordsArray,
     preparePoints,
     validateCoords,
+    debug,
+    chunk,
+    bcError,
 }

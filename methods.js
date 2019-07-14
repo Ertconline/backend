@@ -3,27 +3,24 @@ const {
     createEOSAccount,
     getBalance,
     createApi,
-    createValidation,
-    approveValidation,
-    issueTokens,
     createTx,
     getValidation,
-    getTokens,
+    payout,
+    cancel,
 } = require('./crypto')
-
-const { checkEmail, saveUser, getKeys } = require('./db')
+const { getUser, saveUser, getKeys, saveValidation, getValidationById } = require('./db')
 const config = require('./config')
-const { validateCoords, prepareCoords, prepareCoordsArray, preparePoints } = require('./utils')
-const { getPoints } = require('./points')
+const { prepareCoords, debug, bcError } = require('./utils')
+const { isSameAmount, isValid, checkCurrentValidationState, validation, validationStates } = require('./validation')
 
 const methods = {
     createNewUser: async params => {
         if (!params.email) {
             return { error: { message: 'Invalid email', code: 3 } }
         }
-        const isAvail = await checkEmail(params.email)
-        if (!isAvail) {
-            return { error: { message: 'email already registered', code: 6 } }
+        const user = await getUser({ email: params.email })
+        if (user) {
+            return { result: { uid: user.uid } }
         }
 
         try {
@@ -34,7 +31,7 @@ const methods = {
                 return { result: { uid } }
             }
         } catch (err) {
-            console.log('create acc error', err)
+            debug('create acc error', err)
             return { error: { message: 'internal error, try again later', code: 7 } }
         }
     },
@@ -46,18 +43,11 @@ const methods = {
         return { result: { balance: balance[0].amount } }
     },
     validate: async params => {
-        if (!params.coords || !params.amount || !params.uid || !params.validNum || !params.validDate) {
-            return { error: { message: 'All params required', code: 5 } }
-        }
+        const isValidParams = isValid(params)
 
-        if (params.coords.length < 3) {
-            return { error: { message: 'coords must be 3 or more', code: 8 } }
+        if (isValidParams !== true) {
+            return isValidParams
         }
-
-        if (!validateCoords(params.coords)) {
-            return { error: { message: 'coords must formated like {"x": "9.99", "y":"-9.99"}', code: 9 } }
-        }
-
         try {
             const keys = await getKeys(params.uid)
             if (!keys) {
@@ -65,118 +55,140 @@ const methods = {
             }
             const api = createApi(keys.privateKey)
             const AdminApi = createApi(config.eos.adminKeyProvider)
-            const newValidation = {
-                coords: prepareCoords(params.coords),
-                amount: parseInt(params.amount),
-                creator: params.uid,
-                id: parseInt(params.validNum),
-            }
-
-            if (newValidation.amount < 1) {
-                return { error: { message: 'amount must be greater than 0', code: 10 } }
-            }
-
-            const coordsArray = prepareCoordsArray(params.coords)
-            const validation = await getValidation(newValidation.id)
-            const points = getPoints(coordsArray, newValidation.amount)
-
-            if (!points.length) {
-                return { error: { message: 'cant create points', code: 11 } }
-            }
-
-            const preparedPoints = preparePoints(points)
-
-            if (validation) {
-                if (config.debug) {
-                    console.log('validation Found', { validation })
+            const vid = parseInt(params.validNum)
+            let newValidation = await getValidationById(vid)
+            if (!newValidation) {
+                newValidation = {
+                    coords: prepareCoords(params.coords),
+                    amount: parseInt(params.amount),
+                    creator: params.uid,
+                    id: vid,
                 }
-                if (newValidation.amount !== validation.amount) {
+                await saveValidation(newValidation, params)
+            } else {
+                newValidation = newValidation.data
+            }
+
+            const bcValidation = await getValidation(newValidation.id)
+
+            if (bcValidation) {
+                if (bcValidation.state === validationStates.issued) {
+                    return { result: true }
+                } else if (bcValidation && bcValidation.state === validationStates.canceled) {
                     return {
                         error: {
-                            message:
-                                'Validation already created, but amounts not equal, validation amount: [' +
-                                validation.amount +
-                                '] new validation amount [' +
-                                newValidation.amount +
-                                ']',
-                            code: 14,
+                            message: 'Validation canceled',
+                            code: 15,
                         },
                     }
                 }
-                if (validation.state === 0) {
-                    const txId = await approveValidation(AdminApi, newValidation.id)
-                    if (txId) {
-                        await new Promise((resolve, reject) => {
-                            setTimeout(() => {
-                                resolve()
-                            }, 1500)
-                        })
-                        const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
-                        if (result) {
-                            return { result: true }
-                        }
-                    } else {
-                        return {
-                            error: {
-                                message: 'internal error, try again later',
-                                code: 7,
-                            },
-                        }
-                    }
-                } else if (validation.state === 1) {
-                    const tokens = await getTokens(newValidation.id)
-                    if (!tokens) {
-                        const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
-                        if (result) {
-                            return { result: true }
-                        }
-                    } else {
-                        return { result: true }
-                    }
-                } else if (validation.state === 2) {
-                    return { result: true }
-                }
-            }
-            if (config.debug) {
-                console.log('validation not found')
-            }
-            const valTxId = await createValidation(api, newValidation)
-            if (!valTxId) {
-                return { error: { message: 'internal error, try again later', code: 7 } }
-            }
-            if (config.debug) {
-                console.log('validation created, try approve')
-            }
-            await new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    resolve()
-                }, 1500)
-            })
-            const txId = await approveValidation(AdminApi, newValidation.id)
-            if (txId) {
-                if (config.debug) {
-                    console.log('validation approved, try issue')
-                }
-                await new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        resolve()
-                    }, 1500)
-                })
-                const result = await issueTokens(AdminApi, newValidation.id, preparedPoints)
-                if (result) {
-                    return { result: true }
+                const isSameAmountValidation = isSameAmount(bcValidation, newValidation)
+                if (isSameAmountValidation !== true) {
+                    return isSameAmountValidation
                 }
             }
 
+            const waitRetry = 3
+            let state = await checkCurrentValidationState(AdminApi, newValidation)
+            debug('current state', { state })
+            if (state.currentFinished) {
+                debug('state: currentFinished')
+                return { result: true }
+            }
+            if (state.currentInProgress) {
+                // wait
+                debug('state: currentInProgress')
+                for (let i = 0; i >= waitRetry; i++) {
+                    await new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            resolve()
+                        }, state.estimate)
+                    })
+                    debug('time to check state')
+                    state = await checkCurrentValidationState(AdminApi, newValidation)
+                    debug('current state after wait', { state })
+                    if (state.currentFinished) {
+                        if (
+                            state.currentFinished &&
+                            state.bcState !== validationStates.issued &&
+                            state.bcState !== validationStates.canceled
+                        ) {
+                            await payout(AdminApi, state.id)
+                            return { result: true }
+                        }
+                    }
+                    if (state.currentUnfinished) {
+                        return validation(bcValidation, newValidation, params, api, AdminApi)
+                    }
+                }
+            }
+            if (state.otherInProgress) {
+                // wait
+                debug('state: otherInProgress')
+                for (let i = 0; i >= waitRetry; i++) {
+                    await new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            resolve()
+                        }, state.estimate)
+                    })
+                    debug('time to check state')
+                    state = await checkCurrentValidationState(AdminApi, newValidation)
+                    debug('current state after wait', { state })
+                    if (state.currentUnfinished || state.otherFinished) {
+                        if (
+                            state.otherFinished &&
+                            state.bcState !== validationStates.issued &&
+                            state.bcState !== validationStates.canceled
+                        ) {
+                            await payout(AdminApi, state.id)
+                        }
+
+                        return validation(bcValidation, newValidation, params, api, AdminApi)
+                    }
+                }
+            }
+            if (state.currentUnfinished || state.otherFinished) {
+                if (
+                    state.otherFinished &&
+                    state.bcState !== validationStates.issued &&
+                    state.bcState !== validationStates.canceled
+                ) {
+                    await payout(AdminApi, state.id)
+                }
+                debug('state: currentUnfinished || otherFinished')
+                return validation(bcValidation, newValidation, params, api, AdminApi)
+            }
+            if (state.otherUnfinished) {
+                debug('state: otherUnfinished')
+                // procces other
+                const bcOtherValidation = await getValidation(state.id)
+                let otherValidation = await getValidationById(state.id)
+                const keys = await getKeys(otherValidation.params.uid)
+                if (!keys) {
+                    return { error: { message: 'Other invalid uid', code: 16 } }
+                }
+                const secondApi = createApi(keys.privateKey)
+                const result = await validation(
+                    bcOtherValidation,
+                    otherValidation.data,
+                    otherValidation.params,
+                    secondApi,
+                    AdminApi,
+                )
+                if (result.error) {
+                    debug('cant validate other', { otherValidation, result })
+                    return { error: { message: 'internal error, try again later', code: 7 } }
+                } else {
+                    return validation(bcValidation, newValidation, params, api, AdminApi)
+                }
+            }
+            debug('cant exit from state', { state })
             return { error: { message: 'internal error, try again later', code: 7 } }
         } catch (err) {
-            console.log('create validation error', err)
-            if (err.json && err.json.error && err.json.error.what) {
-                if (err.json.error.what === 'token coordinates are not unique') {
-                    return { error: { message: 'not unique coordinates', code: 12 } }
-                }
-
-                return { error: { message: err.json.error.what, code: 7 } }
+            debug('create validation error', err)
+            const bcErrorMsg = bcError(err)
+            if (bcErrorMsg) {
+                return bcErrorMsg
             }
 
             return { error: { message: err.message, code: 7 } }
@@ -205,6 +217,16 @@ const methods = {
         } catch (err) {
             console.log('create tx error', err)
             return { error: { message: 'internal error, try again later', code: 7 } }
+        }
+    },
+    cancel: async params => {
+        if (!params.id) {
+            return { error: { message: 'All params required', code: 5 } }
+        }
+        const AdminApi = createApi(config.eos.adminKeyProvider)
+        const result = await cancel(AdminApi, params.id)
+        if (result) {
+            return { result: true }
         }
     },
 }

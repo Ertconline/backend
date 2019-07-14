@@ -16,6 +16,7 @@
         "eosjs-ecc": "^4.0.4",
         "express": "^4.16.4",
         "express-ipfilter": "^1.0.1",
+        "mongodb": "^3.2.7",
         "node-fetch": "^2.3.0",
         "temp-turf-rectangle-grid": "^6.0.2"
     },

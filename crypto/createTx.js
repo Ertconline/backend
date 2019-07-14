@@ -1,4 +1,4 @@
-const config = require('../config')
+const { debug } = require('../utils')
 
 const createTx = async (api, data) => {
     const pack = {
@@ -17,10 +17,9 @@ const createTx = async (api, data) => {
             },
         ],
     }
+    debug('createTx:', { tx })
     const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
-    if (config.debug) {
-        console.log('createTx:', { tx, result })
-    }
+    debug('createTx:', { result })
 
     return result.transaction_id
 }

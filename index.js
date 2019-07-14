@@ -4,8 +4,9 @@ const IpDeniedError = require('express-ipfilter').IpDeniedError
 const bodyParser = require('body-parser')
 const http = require('http')
 const config = require('./config')
-const { sendError, sendResult } = require('./utils')
+const { sendError, sendResult, debug } = require('./utils')
 const { methods } = require('./methods')
+const { db } = require('./dbManager')
 
 const app = express()
 if (config.ips && config.ips.length) {
@@ -15,9 +16,7 @@ app.use(bodyParser.json())
 
 app.post('/api', async (req, res) => {
     const { method, params } = req.body
-    if (config.debug) {
-        console.log('request', req.body)
-    }
+    debug('request', req.body)
     if (!methods[method]) {
         return sendError(res, { message: 'Invalid method', code: 1 })
     }
@@ -44,9 +43,11 @@ app.use((err, req, res, next) => {
     }
 })
 
-const server = http.createServer(app)
+db.connect().then(() => {
+    const server = http.createServer(app)
 
-server.listen(config.api.port, config.api.ip)
-server.on('listening', () => {
-    console.log('Express server started on port %s at %s', server.address().port, server.address().address)
+    server.listen(config.api.port, config.api.ip)
+    server.on('listening', () => {
+        console.log('Express server started on port %s at %s', server.address().port, server.address().address)
+    })
 })
