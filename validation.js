@@ -23,7 +23,8 @@ const { getPoints } = require('./points')
 const validationStates = { waiting: 0, validated: 1, issued: 2, canceled: 3 }
 const pointsPartSize = 1000
 const issueRetryTimes = 3
-const issueRetryWaitTime = 501
+const issueRetryWaitTime = 550
+const delay = 550
 
 const checkCurrentValidationState = async (AdminApi, currentValidation) => {
     const state = {
@@ -185,7 +186,7 @@ const approveAndPrepare = async (AdminApi, newValidationId) => {
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, 500)
+                }, delay)
             })
             debug('approved and prepared')
             return true
@@ -206,7 +207,7 @@ const approveAndIssue = async (AdminApi, newValidationId, preparedPoints) => {
         await new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve()
-            }, 500)
+            }, delay)
         })
         debug('validation approved, try issue')
 
@@ -230,7 +231,7 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, 500)
+                }, delay)
             })
             debug('approveAndIssue success try payout')
             const payoutState = await payout(AdminApi, newValidation.id)
@@ -248,7 +249,7 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
                 await new Promise((resolve, reject) => {
                     setTimeout(() => {
                         resolve()
-                    }, 500)
+                    }, delay)
                 })
             } else {
                 debug('cant make preissue')
@@ -261,7 +262,7 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, 500)
+                }, delay)
             })
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
@@ -317,7 +318,7 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, 500)
+                }, delay)
             })
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
