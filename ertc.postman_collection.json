@@ -1,8 +1,7 @@
 {
 	"info": {
+		"_postman_id": "6684ac18-d79c-448f-8824-6daac1655788",
 		"name": "ertc",
-		"_postman_id": "489ff7ac-929d-0f5e-5a14-743ae627fada",
-		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -33,8 +32,7 @@
 					"path": [
 						"api"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -65,8 +63,7 @@
 					"path": [
 						"api"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -97,8 +94,7 @@
 					"path": [
 						"api"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -129,8 +125,40 @@
 					"path": [
 						"api"
 					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cancel",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"method\": \"cancel\", \"params\": {\"id\": \"1228832\"}}"
 				},
-				"description": ""
+				"url": {
+					"raw": "http://127.0.0.1:3100/api",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "3100",
+					"path": [
+						"api"
+					]
+				}
 			},
 			"response": []
 		}
