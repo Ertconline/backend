@@ -105,8 +105,9 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         const cnt = preparedPoints.length
         const state = await getIssueState(AdminApi, newValidationId)
         let globalSuccess = 1
-
-        if (state.id === newValidationId && state.issued === cnt) {
+        const isSameState = state.id === newValidationId
+        const issued = isSameState ? state.issued : 0
+        if (isSameState && state.issued === cnt) {
             debug('all  issued')
             return { result: true }
         }
@@ -126,7 +127,7 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         await saveOrUpdateTask(task)
         debug('current task: ', { task })
         for (const chunk of chunks) {
-            if (state.issued > j * pointsPartSize) {
+            if (issued > j * pointsPartSize) {
                 j++
                 continue
             }
