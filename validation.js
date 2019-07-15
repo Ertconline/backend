@@ -227,6 +227,11 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
     if (bcValidation.state === validationStates.waiting) {
         const result = await approveAndIssue(AdminApi, newValidation.id, preparedPoints)
         if (result && !result.error) {
+            await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve()
+                }, 500)
+            })
             debug('approveAndIssue success try payout')
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
@@ -253,6 +258,11 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
 
         const result = await issueTokensLoop(AdminApi, newValidation.id, preparedPoints)
         if (result && !result.error) {
+            await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve()
+                }, 500)
+            })
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
                 return { result: true }
@@ -304,6 +314,11 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
         const result = await approveAndIssue(AdminApi, newValidation.id, preparedPoints)
         if (result && !result.error) {
             debug('bc validation approved and issued try payout', newValidation)
+            await new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve()
+                }, 500)
+            })
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
                 debug('payout success')
