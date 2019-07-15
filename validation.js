@@ -12,7 +12,7 @@ const {
     savePreparedPoints,
     getPreparedPoints,
     getTaskById,
-    saveTask,
+    saveOrUpdateTask,
     finishTask,
     unfinishTask,
     checkPoints,
@@ -107,30 +107,39 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         let globalSuccess = 1
 
         if (state.issued === cnt) {
+            debug('all  issued')
             return { result: true }
         }
         const chunks = chunk(preparedPoints, pointsPartSize)
-        const j = 0
+        debug('chunks cnt: ', chunks.length)
+        let j = 0
         const estimateOps = chunks.length - Math.ceil(state.issued / pointsPartSize)
         const estimateTimeForOneOp = 300
         const estimate = estimateOps * estimateTimeForOneOp * (issueRetryTimes + 1) // in ms
         const currentTime = new Date().getTime()
-        await saveTask({
+        const task = {
             id: newValidationId,
             estimate,
             startTime: currentTime,
             endTime: currentTime + estimate + 1000, // 1 sec just in case
-        })
+        }
+        await saveOrUpdateTask(task)
+        debug('current task: ', { task })
         for (const chunk of chunks) {
             if (state.issued > j * pointsPartSize) {
+                j++
                 continue
             }
+            debug('try issue chunk: ', j)
             const issueResult = await issueTokens(AdminApi, newValidationId, chunk)
             if (issueResult) {
+                j++
                 continue
             } else {
+                debug('try again issue chunk: ', j)
                 let success = 0
-                for (let i = 0; i >= issueRetryTimes; i++) {
+                for (let i = 0; i <= issueRetryTimes; i++) {
+                    debug('try again issue chunk, retry: ', i)
                     await new Promise((resolve, reject) => {
                         setTimeout(() => {
                             resolve()
@@ -143,11 +152,13 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
                     }
                 }
                 if (!success) {
+                    debug('try again issue chunk failed', j)
                     globalSuccess = 0
                     await unfinishTask(newValidationId)
                     break
                 }
             }
+            j++
         }
         if (globalSuccess) {
             await finishTask(newValidationId)

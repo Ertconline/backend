@@ -72,8 +72,13 @@ const getTaskById = async id => {
     return task
 }
 
-const saveTask = async data => {
-    return db.insert('tasks', { id: data.id, ...data })
+const saveOrUpdateTask = async data => {
+    const task = await getTaskById(data.id)
+    if (!task) {
+        return db.insert('tasks', { id: data.id, ...data })
+    } else {
+        return db.updateOne('tasks', { id: data.id }, { ...data })
+    }
 }
 
 const finishTask = async id => {
@@ -98,7 +103,7 @@ module.exports = {
     getValidationById,
     saveValidation,
     getTaskById,
-    saveTask,
+    saveOrUpdateTask,
     finishTask,
     unfinishTask,
     checkPoints,

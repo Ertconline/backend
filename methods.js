@@ -98,7 +98,7 @@ const methods = {
             if (state.currentInProgress) {
                 // wait
                 debug('state: currentInProgress')
-                for (let i = 0; i >= waitRetry; i++) {
+                for (let i = 0; i <= waitRetry; i++) {
                     await new Promise((resolve, reject) => {
                         setTimeout(() => {
                             resolve()
@@ -125,7 +125,7 @@ const methods = {
             if (state.otherInProgress) {
                 // wait
                 debug('state: otherInProgress')
-                for (let i = 0; i >= waitRetry; i++) {
+                for (let i = 0; i <= waitRetry; i++) {
                     await new Promise((resolve, reject) => {
                         setTimeout(() => {
                             resolve()
