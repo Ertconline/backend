@@ -106,7 +106,7 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         const state = await getIssueState(AdminApi, newValidationId)
         let globalSuccess = 1
 
-        if (state.issued === cnt) {
+        if (state.id === newValidationId && state.issued === cnt) {
             debug('all  issued')
             return { result: true }
         }
