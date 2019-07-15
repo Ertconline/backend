@@ -27,6 +27,7 @@ const issueRetryWaitTime = 550
 const delay = 550
 
 const checkCurrentValidationState = async (AdminApi, currentValidation) => {
+    debug('checkCurrentValidationState', { currentValidation })
     const state = {
         currentInProgress: false,
         currentFinished: false,
@@ -181,6 +182,11 @@ const approveAndPrepare = async (AdminApi, newValidationId) => {
     debug('try approve and prepare')
     try {
         const txIdApprove = await approveValidation(AdminApi, newValidationId)
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve()
+            }, delay)
+        })
         const txIdPreIssue = await preIssue(AdminApi, newValidationId)
         if (txIdApprove && txIdPreIssue) {
             await new Promise((resolve, reject) => {
@@ -223,7 +229,7 @@ const approveAndIssue = async (AdminApi, newValidationId, preparedPoints) => {
 }
 
 const proccessValidation = async (bcValidation, newValidation, AdminApi, preparedPoints) => {
-    debug('proccessValidation', { bcValidation })
+    debug('proccessValidation', { bcValidation, newValidation })
 
     if (bcValidation.state === validationStates.waiting) {
         const result = await approveAndIssue(AdminApi, newValidation.id, preparedPoints)
@@ -284,6 +290,7 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
 }
 
 const validation = async (bcValidation, newValidation, params, api, AdminApi) => {
+    debug('validation', { bcValidation, newValidation, params })
     try {
         let preparedPoints = await getPreparedPoints(newValidation.id)
         if (!preparedPoints.length) {
@@ -311,7 +318,11 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             return { error: { message: 'internal error, try again later', code: 7 } }
         }
         debug('bc validation created', newValidation)
-
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve()
+            }, delay)
+        })
         const result = await approveAndIssue(AdminApi, newValidation.id, preparedPoints)
         if (result && !result.error) {
             debug('bc validation approved and issued try payout', newValidation)
