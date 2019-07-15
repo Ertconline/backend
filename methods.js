@@ -93,6 +93,11 @@ const methods = {
             debug('current state', { state })
             if (state.currentFinished) {
                 debug('state: currentFinished')
+                if (state.bcState !== validationStates.issued && state.bcState !== validationStates.canceled) {
+                    await payout(AdminApi, state.id)
+                    return { result: true }
+                }
+
                 return { result: true }
             }
             if (state.currentInProgress) {
