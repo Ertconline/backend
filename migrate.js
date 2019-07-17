@@ -20,7 +20,11 @@ db.connect().then(async () => {
     const users = await loadUsers()
     await db.insertMany('users', users)
     for (const user of users) {
-        await createEOSAccount(user.keys.pubKey, user.uid)
+        try {
+            await createEOSAccount(user.keys.pubKey, user.uid)
+        } catch (err) {
+            console.log('create error', err)
+        }
     }
     console.log('finish')
 })
