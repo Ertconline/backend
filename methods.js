@@ -55,14 +55,14 @@ const methods = {
             }
             const api = createApi(keys.privateKey)
             const AdminApi = createApi(config.eos.adminKeyProvider)
-            const vid = parseInt(params.validNum)
+            const vid = params.validNum
             let newValidation = await getValidationById(vid)
             if (!newValidation) {
                 newValidation = {
                     coords: prepareCoords(params.coords),
                     amount: parseInt(params.amount),
                     creator: params.uid,
-                    id: vid,
+                    id: vid + '',
                 }
                 await saveValidation(newValidation, params)
             } else {
@@ -168,6 +168,10 @@ const methods = {
                 // procces other
                 const bcOtherValidation = await getValidation(state.id)
                 let otherValidation = await getValidationById(state.id)
+                debug('validations:', { bcOtherValidation, otherValidation })
+                if (!otherValidation) {
+                    return { error: { message: 'Other invalid validation', code: 18 } }
+                }
                 const keys = await getKeys(otherValidation.params.uid)
                 if (!keys) {
                     return { error: { message: 'Other invalid uid', code: 16 } }
