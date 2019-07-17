@@ -2,8 +2,8 @@ const config = require('../config')
 const { api } = require('./cryptoApi')
 const { generateName, debug } = require('../utils')
 
-const createEOSAccount = async pubKey => {
-    const uid = generateName()
+const createEOSAccount = async (pubKey, uid = null) => {
+    uid = uid || generateName()
     const activeKey = pubKey
     const ownerKey = pubKey
     // TODO check pubkey
