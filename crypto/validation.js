@@ -61,6 +61,10 @@ const preIssue = async (api, validId) => {
 }
 
 const payout = async (api, validId) => {
+    if (validId === 0) {
+        debug('invalid payout id, skip', { validId })
+        return true
+    }
     const pack = { id: validId }
     const tx = {
         actions: [
