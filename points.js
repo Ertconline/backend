@@ -43,11 +43,12 @@ const getPoints = (originalCoords, pointsCount, precision = 8) => {
     points.push(enveloped.geometry.coordinates[0].map(coord => coord.map(c => c.toPrecision(precision))))
 
     points = points.slice(0, pointsCount)
-    if (points.length !== pointsCount) {
-        return []
-    }
+
     if (config.debug) {
         console.log('getPoints output', { l: points.length, points })
+    }
+    if (points.length !== pointsCount) {
+        return []
     }
 
     return points
