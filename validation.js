@@ -50,6 +50,10 @@ const checkCurrentValidationState = async (AdminApi, currentValidation) => {
         }
     }
     const currentState = await getIssueState(AdminApi, currentValidation.id)
+    if (!currentState) {
+        state.otherFinished = true
+        return state
+    }
     state.id = currentState.id
     state.bcState = currentState.state
     if (currentState.state === validationStates.issued) {
