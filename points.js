@@ -4,11 +4,11 @@ const util = require('util')
 const config = require('./config')
 util.inspect.defaultOptions.depth = null
 
-const getPoints = (originalCoords, pointsCount, precision = 8) => {
+const getPoints = (originalCoords, pointsCount, precision = 12) => {
     if (config.debug) {
         console.log('getPoints input', { originalCoords, pointsCount, precision })
     }
-
+    const needPoints = pointsCount + 10
     let points = []
     const features = turf.featureCollection([...originalCoords.map(coord => turf.point(coord))])
 
@@ -21,8 +21,8 @@ const getPoints = (originalCoords, pointsCount, precision = 8) => {
     // height
     const hline = turf.lineString([[bbox[0], bbox[1]], [bbox[0], bbox[3]]])
 
-    const isEven = pointsCount % 2 === 0
-    const div = isEven ? pointsCount / 2 : (pointsCount - 1) / 2
+    const isEven = needPoints % 2 === 0
+    const div = isEven ? needPoints / 2 : (needPoints - 1) / 2
 
     const wlength = turf.length(wline)
     const hlength = turf.length(hline)
@@ -37,21 +37,21 @@ const getPoints = (originalCoords, pointsCount, precision = 8) => {
         points.push(f.geometry.coordinates.map(coord => coord.toPrecision(precision)))
     })
 
+    points.push(enveloped.geometry.coordinates[0].map(coord => coord.map(c => c.toPrecision(precision))))
     if (!isEven) {
         points.push(center.geometry.coordinates.map(coord => coord.toPrecision(precision)))
     }
-    points.push(enveloped.geometry.coordinates[0].map(coord => coord.map(c => c.toPrecision(precision))))
 
-    points = points.slice(0, pointsCount)
+    const slicedPoints = points.slice(0, pointsCount)
 
     if (config.debug) {
-        console.log('getPoints output', { l: points.length, points })
+        console.log('getPoints output', { pl: points.length, spl: slicedPoints.length, points })
     }
-    if (points.length !== pointsCount) {
+    if (slicedPoints.length !== pointsCount) {
         return []
     }
 
-    return points
+    return slicedPoints
 }
 
 module.exports = { getPoints }
