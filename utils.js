@@ -3,6 +3,10 @@ const Decimal = require('decimal.js')
 const util = require('util')
 util.inspect.defaultOptions.depth = null
 
+const onlyUnique = (value, index, self) => {
+    return self.indexOf(value) === index
+}
+
 const parseTokenString = tokenString => {
     const [amountString, symbol] = tokenString.split(' ').map(t => t.trim())
     const amount = amountString
@@ -82,7 +86,7 @@ const isValidCoord = coord => {
     return true
 }
 
-const validateCoords = coords => {
+const validateCoordsFormat = coords => {
     const newCoords = coords
         .map(cs => {
             const exists = cs.x && cs.y
@@ -94,6 +98,15 @@ const validateCoords = coords => {
             }
         })
         .filter(c => c)
+    return newCoords.length === coords.length
+}
+
+const validateCoordsUniqness = coords => {
+    const newCoords = coords
+        .map(cs => {
+            return cs.x + '|' + cs.y
+        })
+        .filter(onlyUnique)
     return newCoords.length === coords.length
 }
 
@@ -136,7 +149,8 @@ module.exports = {
     prepareCoords,
     prepareCoordsArray,
     preparePoints,
-    validateCoords,
+    validateCoordsFormat,
+    validateCoordsUniqness,
     debug,
     chunk,
     bcError,

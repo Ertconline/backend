@@ -17,7 +17,15 @@ const {
     unfinishTask,
     checkPoints,
 } = require('./db')
-const { validateCoords, prepareCoordsArray, preparePoints, debug, chunk, bcError } = require('./utils')
+const {
+    validateCoordsFormat,
+    validateCoordsUniqness,
+    prepareCoordsArray,
+    preparePoints,
+    debug,
+    chunk,
+    bcError,
+} = require('./utils')
 const { getPoints } = require('./points')
 
 const validationStates = { waiting: 0, validated: 1, issued: 2, canceled: 3 }
@@ -363,9 +371,15 @@ const isValid = params => {
         return { error: { message: 'coords must be 3 or more', code: 8 } }
     }
 
-    if (!validateCoords(params.coords)) {
+    if (!validateCoordsFormat(params.coords)) {
         return {
-            error: { message: 'coords must formated like {"x": "9.99", "y":"-9.99"}', code: 9 },
+            error: { message: 'coords must formatted like {"x": "9.99", "y":"-9.99"}', code: 9 },
+        }
+    }
+
+    if (!validateCoordsUniqness(params.coords)) {
+        return {
+            error: { message: 'all coords must unique', code: 15 },
         }
     }
 
