@@ -373,13 +373,13 @@ const isValid = params => {
 
     if (!validateCoordsFormat(params.coords)) {
         return {
-            error: { message: 'coords must formatted like {"x": "9.99", "y":"-9.99"}', code: 9 },
+            error: { message: 'coords must be formatted like {"x": "9.99", "y":"-9.99"}', code: 9 },
         }
     }
 
     if (!validateCoordsUniqness(params.coords)) {
         return {
-            error: { message: 'all coords must unique', code: 15 },
+            error: { message: 'all coords must be unique', code: 15 },
         }
     }
 
