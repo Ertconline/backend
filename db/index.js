@@ -62,6 +62,11 @@ const saveValidation = async (data, params) => {
     await db.insert('validations', { id: data.id, data, params })
 }
 
+const removeValidation = async id => {
+    await db.deleteOne('validations', { id })
+    await db.deleteMany('pointz', { vid: id })
+}
+
 const getTaskById = async id => {
     const task = await db.findOne('tasks', { id })
     if (task) {
@@ -107,4 +112,5 @@ module.exports = {
     finishTask,
     unfinishTask,
     checkPoints,
+    removeValidation,
 }

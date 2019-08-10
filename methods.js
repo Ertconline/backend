@@ -8,7 +8,7 @@ const {
     payout,
     cancel,
 } = require('./crypto')
-const { getUser, saveUser, getKeys, saveValidation, getValidationById } = require('./db')
+const { getUser, saveUser, getKeys, saveValidation, getValidationById, removeValidation } = require('./db')
 const config = require('./config')
 const { prepareCoords, debug, bcError } = require('./utils')
 const { isSameAmount, isValid, checkCurrentValidationState, validation, validationStates } = require('./validation')
@@ -235,6 +235,7 @@ const methods = {
         const AdminApi = createApi(config.eos.adminKeyProvider)
         const result = await cancel(AdminApi, params.id)
         if (result) {
+            await removeValidation(params.id)
             return { result: true }
         }
     },

@@ -160,6 +160,16 @@ class DBManager {
         }
     }
 
+    async deleteMany(collection, filter) {
+        try {
+            filter = prepareBigIntAndBuffer(filter)
+            await this.connect()
+            return this.db.collection(this.getCollection(collection)).deleteMany(filter)
+        } catch (err) {
+            console.log('deleteMany', err, { collection, filter })
+        }
+    }
+
     async updateOne(collection, query, update, useSet = true) {
         try {
             await this.connect()
