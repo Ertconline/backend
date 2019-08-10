@@ -233,10 +233,20 @@ const methods = {
             return { error: { message: 'All params required', code: 5 } }
         }
         const AdminApi = createApi(config.eos.adminKeyProvider)
-        const result = await cancel(AdminApi, params.id)
-        if (result) {
-            await removeValidation(params.id)
-            return { result: true }
+        try {
+            const result = await cancel(AdminApi, params.id)
+            if (result) {
+                await removeValidation(params.id)
+                return { result: true }
+            }
+        } catch (err) {
+            debug('cancel validation error', err)
+            const bcErrorMsg = bcError(err)
+            if (bcErrorMsg) {
+                return bcErrorMsg
+            }
+
+            return { error: { message: err.message, code: 7 } }
         }
     },
 }
