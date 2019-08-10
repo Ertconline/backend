@@ -234,9 +234,9 @@ const methods = {
         }
         const AdminApi = createApi(config.eos.adminKeyProvider)
         try {
+            await removeValidation(params.id)
             const result = await cancel(AdminApi, params.id)
             if (result) {
-                await removeValidation(params.id)
                 return { result: true }
             }
         } catch (err) {
