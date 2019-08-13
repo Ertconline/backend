@@ -1,25 +1,38 @@
+const { readFileSync } = require('fs')
+
 const { db } = require('./dbManager')
 const secret = 'youShallNotPass'
 const crypto = require('crypto')
 
 db.connect().then(async () => {
-    const points = await db.find('points', {})
-    for (const p of points) {
-        await db.insertMany(
-            'pointz',
-            p.data.map(pt => ({
-                vid: p.vid,
-                longitude: pt.longitude,
-                latitude: pt.latitude,
-                hash: crypto
-                    .createHmac('sha256', secret)
-                    .update(JSON.stringify(pt))
-                    .digest('hex'),
-            })),
-        )
+    let emails = readFileSync('./emails.txt')
+    emails = emails.toString().split('\n')
+    for (const email of emails) {
+        const result = await db.find('users', { email })
+        if (!result.length) {
+            console.log('not found', { email })
+        }
     }
-    console.log('finish')
 })
+
+// db.connect().then(async () => {
+//     const points = await db.find('points', {})
+//     for (const p of points) {
+//         await db.insertMany(
+//             'pointz',
+//             p.data.map(pt => ({
+//                 vid: p.vid,
+//                 longitude: pt.longitude,
+//                 latitude: pt.latitude,
+//                 hash: crypto
+//                     .createHmac('sha256', secret)
+//                     .update(JSON.stringify(pt))
+//                     .digest('hex'),
+//             })),
+//         )
+//     }
+//     console.log('finish')
+// })
 
 // const rectangleGrid = require('temp-turf-rectangle-grid')
 // const turf = require('@turf/turf')
