@@ -9,18 +9,23 @@ db.connect().then(async () => {
     emails = emails.toString().split('\n')
     let uids = readFileSync('./uids.txt')
     uids = uids.toString().split('\n')
+    let ne = 0
+    let nu = 0
     for (const email of emails) {
         const result = await db.find('users', { email })
         if (!result.length) {
+            ne++
             console.log('not found', { email })
         }
     }
     for (const uid of uids) {
         const result = await db.find('users', { uid })
         if (!result.length) {
+            nu++
             console.log('not found', { uid })
         }
     }
+    console.log({ ne, nu })
 })
 
 // db.connect().then(async () => {
