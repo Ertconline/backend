@@ -45,7 +45,7 @@ app.use((err, req, res, next) => {
 
 db.connect().then(() => {
     const server = http.createServer(app)
-
+    server.setTimeout(1800000)
     server.listen(config.api.port, config.api.ip)
     server.on('listening', () => {
         console.log('Express server started on port %s at %s', server.address().port, server.address().address)

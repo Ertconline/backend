@@ -1,6 +1,7 @@
 const config = require('./config')
 const Decimal = require('decimal.js')
 const util = require('util')
+const format = require('date-fns/format')
 util.inspect.defaultOptions.depth = null
 
 const onlyUnique = (value, index, self) => {
@@ -27,7 +28,7 @@ const generateName = (length = 10, prefix = 'e.') => {
 const sendError = (res, error) => {
     const response = { success: 0, ...error }
     if (config.debug) {
-        console.log('response', response)
+        console.log(format(Date.now(), 'YYYYMMDD-HH:mm:ss'), 'response', response)
     }
     res.status(500)
     return res.json(response)
@@ -36,7 +37,7 @@ const sendError = (res, error) => {
 const sendResult = (res, result) => {
     const response = { success: 1, result }
     if (config.debug) {
-        console.log('response', response)
+        console.log(format(Date.now(), 'YYYYMMDD-HH:mm:ss'), 'response', response)
     }
 
     return res.json(response)
@@ -112,7 +113,7 @@ const validateCoordsUniqness = coords => {
 
 const debug = (...args) => {
     if (config.debug) {
-        console.log(...args)
+        console.log(format(Date.now(), 'YYYYMMDD-HH:mm:ss'), ...args)
     }
 }
 
