@@ -84,7 +84,8 @@ const prepareCoordsArray = coords => {
 }
 
 const isValidCoord = coord => {
-    return true
+    const floatCoord = parseFloat(coord)
+    return floatCoord < 180 && floatCoord > -180
 }
 
 const validateCoordsFormat = coords => {
