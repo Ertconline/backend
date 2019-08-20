@@ -63,7 +63,7 @@ const saveValidation = async (data, params) => {
 }
 
 const removeValidation = async id => {
-    await db.deleteOne('validations', { id })
+    await db.updateOne('validations', { id }, { $set: { state: 'deleted' } })
     await db.deleteMany('pointz', { vid: id })
 }
 

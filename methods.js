@@ -7,6 +7,7 @@ const {
     getValidation,
     payout,
     cancel,
+    getIssueState,
 } = require('./crypto')
 const { getUser, saveUser, getKeys, saveValidation, getValidationById, removeValidation } = require('./db')
 const config = require('./config')
@@ -233,7 +234,18 @@ const methods = {
             return { error: { message: 'All params required', code: 5 } }
         }
         const AdminApi = createApi(config.eos.adminKeyProvider)
+
         try {
+            const state = await getIssueState(AdminApi, params.id)
+            debug('state', state)
+            const isSameState = state.id === params.id
+            const issued = state.issued > 0
+            if (isSameState) {
+                if (issued) {
+                    debug('cant cancel partially issued validation')
+                    return { error: { message: 'cant cancel partially issued validation', code: 7 } }
+                }
+            }
             await removeValidation(params.id)
             const result = await cancel(AdminApi, params.id)
             if (result) {

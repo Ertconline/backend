@@ -136,7 +136,7 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
             id: newValidationId,
             estimate,
             startTime: currentTime,
-            endTime: currentTime + estimate + 1000, // 1 sec just in case
+            endTime: currentTime + estimate + 1001, // 1 sec just in case
         }
         await saveOrUpdateTask(task)
         debug('current task: ', { task })
