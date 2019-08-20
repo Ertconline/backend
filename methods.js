@@ -246,11 +246,12 @@ const methods = {
                     return { error: { message: 'cant cancel partially issued validation', code: 7 } }
                 }
             }
-            await removeValidation(params.id)
-            const result = await cancel(AdminApi, params.id)
-            if (result) {
-                return { result: true }
-            }
+            debug('cancel validation', params.id)
+            // await removeValidation(params.id)
+            // const result = await cancel(AdminApi, params.id)
+            // if (result) {
+                // return { result: true }
+            // }
         } catch (err) {
             debug('cancel validation error', err)
             const bcErrorMsg = bcError(err)
