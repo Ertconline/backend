@@ -247,11 +247,11 @@ const methods = {
                 }
             }
             debug('cancel validation', params.id)
-            // await removeValidation(params.id)
-            // const result = await cancel(AdminApi, params.id)
-            // if (result) {
-                // return { result: true }
-            // }
+            await removeValidation(params.id)
+            const result = await cancel(AdminApi, params.id)
+            if (result) {
+                return { result: true }
+            }
         } catch (err) {
             debug('cancel validation error', err)
             const bcErrorMsg = bcError(err)
