@@ -36,7 +36,6 @@ const issueTokens = async (api, id, points) => {
     debug('issueTokens', { tx })
     const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
     debug('issueTokens', { result })
-
     return result
 }
 

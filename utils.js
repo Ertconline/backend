@@ -130,12 +130,24 @@ const chunk = (arr, len) => {
     return chunks
 }
 
+const shiftChunk = arr => {
+    return arr.map(el => {
+        el.latitude++
+        el.longitude++
+        return el
+    })
+}
+
 const bcError = err => {
     if (err.json && err.json.error && err.json.error.details && err.json.error.details.length) {
+        if (err.json.error.details[0].message.indexOf('token coordinates are not unique') !== -1) {
+            return { error: { message: 'not unique coordinates', code: 12 } }
+        }
+
         return { error: { message: err.json.error.details[0].message, code: 7 } }
     }
     if (err.json && err.json.error && err.json.error.what) {
-        if (err.json.error.what === 'token coordinates are not unique') {
+        if (err.json.error.what.indexOf('token coordinates are not unique') !== -1) {
             return { error: { message: 'not unique coordinates', code: 12 } }
         }
 
@@ -156,4 +168,5 @@ module.exports = {
     debug,
     chunk,
     bcError,
+    shiftChunk,
 }

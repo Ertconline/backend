@@ -24,6 +24,7 @@ const {
     preparePoints,
     debug,
     chunk,
+    shiftChunk,
     bcError,
 } = require('./utils')
 const { getPoints } = require('./points')
@@ -140,13 +141,23 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         }
         await saveOrUpdateTask(task)
         debug('current task: ', { task })
-        for (const chunk of chunks) {
+        for (let chunk of chunks) {
             if (issued > j * pointsPartSize) {
                 j++
                 continue
             }
             debug('try issue chunk: ', j)
-            const issueResult = await issueTokens(AdminApi, newValidationId, chunk)
+            let issueResult
+            let shift = 0
+            try {
+                issueResult = await issueTokens(AdminApi, newValidationId, chunk)
+            } catch (err) {
+                debug('issue tokens error', err)
+                const bcErrorMsg = bcError(err)
+                if (bcErrorMsg && bcErrorMsg.error.code === 12) {
+                    shift = 1
+                }
+            }
             if (issueResult) {
                 j++
                 continue
@@ -160,10 +171,23 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
                             resolve()
                         }, issueRetryWaitTime)
                     })
-                    const result = await issueTokens(AdminApi, newValidationId, chunk)
-                    if (result) {
-                        success = 1
-                        break
+                    try {
+                        if (shift) {
+                            chunk = shiftChunk(chunk)
+                        }
+                        const result = await issueTokens(AdminApi, newValidationId, chunk)
+                        if (result) {
+                            success = 1
+                            break
+                        }
+                    } catch (err) {
+                        debug('issue tokens error', err)
+                        const bcErrorMsg = bcError(err)
+                        if (bcErrorMsg) {
+                            return bcErrorMsg
+                        }
+
+                        return { error: { message: err.message, code: 7 } }
                     }
                 }
                 if (!success) {
