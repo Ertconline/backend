@@ -37,7 +37,7 @@ const getPoints = (originalCoords, pointsCount, precision = 12) => {
         points.push(f.geometry.coordinates.map(coord => coord.toPrecision(precision)))
     })
 
-    points.push(enveloped.geometry.coordinates[0].map(coord => coord.map(c => c.toPrecision(precision))))
+    points.push(...enveloped.geometry.coordinates[0].map(coord => coord.map(c => c.toPrecision(precision))))
     if (!isEven) {
         points.push(center.geometry.coordinates.map(coord => coord.toPrecision(precision)))
     }
