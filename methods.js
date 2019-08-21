@@ -8,6 +8,7 @@ const {
     payout,
     cancel,
     getIssueState,
+    reInState,
 } = require('./crypto')
 const { getUser, saveUser, getKeys, saveValidation, getValidationById, removeValidation } = require('./db')
 const config = require('./config')
@@ -261,6 +262,16 @@ const methods = {
 
             return { error: { message: err.message, code: 7 } }
         }
+    },
+    getstate: async params => {
+        const AdminApi = createApi(config.eos.adminKeyProvider)
+        const state = await getIssueState(AdminApi, params.id)
+        return state
+    },
+    reinstate: async params => {
+        const AdminApi = createApi(config.eos.adminKeyProvider)
+        const state = await reInState(AdminApi, params.id)
+        return state
     },
 }
 

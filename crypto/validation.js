@@ -116,6 +116,25 @@ const getIssueState = async () => {
     return resp.rows ? resp.rows[0] : false
 }
 
+const reInState = async (api, validId) => {
+    const pack = { id: validId }
+    const tx = {
+        actions: [
+            {
+                account: 'ertc',
+                name: 'reinstate',
+                authorization: [{ actor: 'ertc', permission: 'active' }],
+                data: pack,
+            },
+        ],
+    }
+    debug('reinstate', { tx })
+    const result = await api.transact(tx, { blocksBehind: 3, expireSeconds: 3600 })
+    debug('reinstate', { result })
+
+    return result
+}
+
 // cleos get table ertc ertc validation -L8 -U8 -l1
 const getValidation = async validId => {
     const request = {
@@ -134,4 +153,13 @@ const getValidation = async validId => {
     return resp.rows ? resp.rows[0] : false
 }
 
-module.exports = { createValidation, approveValidation, getValidation, getIssueState, preIssue, payout, cancel }
+module.exports = {
+    createValidation,
+    approveValidation,
+    getValidation,
+    getIssueState,
+    preIssue,
+    payout,
+    cancel,
+    reInState,
+}
