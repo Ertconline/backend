@@ -266,12 +266,12 @@ const methods = {
     getstate: async params => {
         const AdminApi = createApi(config.eos.adminKeyProvider)
         const state = await getIssueState(AdminApi, params.id)
-        return state
+        return { result: state }
     },
     reinstate: async params => {
         const AdminApi = createApi(config.eos.adminKeyProvider)
         const state = await reInState(AdminApi, params.id)
-        return state
+        return { result: state }
     },
 }
 
