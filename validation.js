@@ -339,8 +339,10 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             if (!points.length) {
                 return { error: { message: 'cant create points', code: 11 } }
             }
-
+            debug('start prepare points')
             preparedPoints = preparePoints(points)
+
+            debug('start check prepared points')
             const check = await checkPoints(preparedPoints)
             if (!check) {
                 debug('not unique', { check })

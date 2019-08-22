@@ -190,13 +190,13 @@ const methods = {
                 let otherValidation = await getValidationById(state.id)
                 debug('validations:', { bcOtherValidation, otherValidation })
                 if (!otherValidation) {
-                    updateValidationState(vid, 'new')
                     return { error: { message: 'Other invalid validation', code: 17 } }
                 }
                 const keys = await getKeys(otherValidation.params.uid)
                 if (!keys) {
                     return { error: { message: 'Other invalid uid', code: 16 } }
                 }
+                updateValidationState(state.id, 'new')
                 const secondApi = createApi(keys.privateKey)
                 const result = await validation(
                     bcOtherValidation,
