@@ -16,6 +16,7 @@ const {
     finishTask,
     unfinishTask,
     checkPoints,
+    updateValidationState,
 } = require('./db')
 const {
     validateCoordsFormat,
@@ -278,6 +279,7 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             debug('approveAndIssue success try payout')
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
+                updateValidationState(newValidation.id, 'finished')
                 return { result: true }
             }
         } else if (result) {
@@ -308,6 +310,7 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             })
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
+                updateValidationState(newValidation.id, 'finished')
                 return { result: true }
             }
         } else if (result) {
@@ -369,6 +372,7 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             })
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
+                updateValidationState(newValidation.id, 'finished')
                 debug('payout success')
                 return { result: true }
             }

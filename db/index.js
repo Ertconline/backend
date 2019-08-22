@@ -55,11 +55,21 @@ const savePreparedPoints = async (vid, data) => {
 
 const getValidationById = async id => {
     const validation = await db.findOne('validations', { id })
+    if (validation) {
+        const currentTime = new Date().getTime()
+        validation.expired = currentTime < validation.time + 1800000
+    }
+
     return validation
 }
 
 const saveValidation = async (data, params) => {
     await db.insert('validations', { id: data.id, data, params })
+}
+
+const updateValidationState = async (id, state) => {
+    const time = new Date().getTime()
+    await db.updateOne('validations', { id }, { $set: { state, time } })
 }
 
 const removeValidation = async id => {
@@ -113,4 +123,5 @@ module.exports = {
     unfinishTask,
     checkPoints,
     removeValidation,
+    updateValidationState,
 }

@@ -10,7 +10,15 @@ const {
     getIssueState,
     reInState,
 } = require('./crypto')
-const { getUser, saveUser, getKeys, saveValidation, getValidationById, removeValidation } = require('./db')
+const {
+    getUser,
+    saveUser,
+    getKeys,
+    saveValidation,
+    getValidationById,
+    removeValidation,
+    updateValidationState,
+} = require('./db')
 const config = require('./config')
 const { prepareCoords, debug, bcError } = require('./utils')
 const { isSameAmount, isValid, checkCurrentValidationState, validation, validationStates } = require('./validation')
@@ -67,7 +75,11 @@ const methods = {
                     id: vid + '',
                 }
                 await saveValidation(newValidation, params)
+                updateValidationState(vid, 'new')
             } else {
+                if (newValidation.state === 'new' && !newValidation.expired) {
+                    return { error: { message: 'still in progress', code: 18 } }
+                }
                 newValidation = newValidation.data
             }
 
@@ -77,6 +89,7 @@ const methods = {
                 if (bcValidation.state === validationStates.issued) {
                     return { result: true }
                 } else if (bcValidation && bcValidation.state === validationStates.canceled) {
+                    updateValidationState(vid, 'canceled')
                     return {
                         error: {
                             message: 'Validation canceled',
@@ -86,6 +99,7 @@ const methods = {
                 }
                 const isSameAmountValidation = isSameAmount(bcValidation, newValidation)
                 if (isSameAmountValidation !== true) {
+                    updateValidationState(vid, 'error')
                     return isSameAmountValidation
                 }
             }
@@ -97,6 +111,7 @@ const methods = {
                 debug('state: currentFinished')
                 if (state.bcState !== validationStates.issued && state.bcState !== validationStates.canceled) {
                     await payout(AdminApi, state.id)
+                    updateValidationState(vid, 'finished')
                     return { result: true }
                 }
 
@@ -121,6 +136,7 @@ const methods = {
                             state.bcState !== validationStates.canceled
                         ) {
                             await payout(AdminApi, state.id)
+                            updateValidationState(state.id, 'finished')
                             return { result: true }
                         }
                     }
@@ -148,6 +164,7 @@ const methods = {
                             state.bcState !== validationStates.canceled
                         ) {
                             await payout(AdminApi, state.id)
+                            updateValidationState(state.id, 'finished')
                         }
 
                         return validation(bcValidation, newValidation, params, api, AdminApi)
@@ -161,6 +178,7 @@ const methods = {
                     state.bcState !== validationStates.canceled
                 ) {
                     await payout(AdminApi, state.id)
+                    updateValidationState(state.id, 'finished')
                 }
                 debug('state: currentUnfinished || otherFinished')
                 return validation(bcValidation, newValidation, params, api, AdminApi)
@@ -172,7 +190,8 @@ const methods = {
                 let otherValidation = await getValidationById(state.id)
                 debug('validations:', { bcOtherValidation, otherValidation })
                 if (!otherValidation) {
-                    return { error: { message: 'Other invalid validation', code: 18 } }
+                    updateValidationState(vid, 'new')
+                    return { error: { message: 'Other invalid validation', code: 17 } }
                 }
                 const keys = await getKeys(otherValidation.params.uid)
                 if (!keys) {
@@ -239,13 +258,10 @@ const methods = {
         try {
             const state = await getIssueState(AdminApi, params.id)
             debug('state', state)
-            const isSameState = state.id === params.id
             const issued = state.issued > 0
-            if (isSameState) {
-                if (issued) {
-                    debug('cant cancel partially issued validation')
-                    return { error: { message: 'cant cancel partially issued validation', code: 7 } }
-                }
+            if (issued) {
+                debug('cant cancel partially issued validation')
+                return { error: { message: 'cant cancel partially issued validation', code: 7 } }
             }
             debug('cancel validation', params.id)
             await removeValidation(params.id)
