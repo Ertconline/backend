@@ -57,7 +57,7 @@ const getValidationById = async id => {
     const validation = await db.findOne('validations', { id })
     if (validation) {
         const currentTime = new Date().getTime()
-        validation.expired = currentTime < validation.time + 1800000
+        validation.expired = currentTime > validation.time + 1800000
     }
 
     return validation
