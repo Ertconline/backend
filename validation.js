@@ -151,7 +151,18 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
             let issueResult
             let shift = 0
             try {
+                const stateBefore = await getIssueState(AdminApi, newValidationId)
                 issueResult = await issueTokens(AdminApi, newValidationId, chunk)
+                await new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        resolve()
+                    }, issueRetryWaitTime * 2)
+                })
+                const stateAfter = await getIssueState(AdminApi, newValidationId)
+                if (stateBefore.issued === stateAfter.issued) {
+                    debug('issue tokens error', 'same state after issue')
+                    issueResult = false
+                }
             } catch (err) {
                 debug('issue tokens error', err)
                 const bcErrorMsg = bcError(err)
@@ -176,8 +187,14 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
                         if (shift) {
                             chunk = shiftChunk(chunk)
                         }
-                        const result = await issueTokens(AdminApi, newValidationId, chunk)
-                        if (result) {
+                        const stateBefore = await getIssueState(AdminApi, newValidationId)
+                        let issueResult = await issueTokens(AdminApi, newValidationId, chunk)
+                        const stateAfter = await getIssueState(AdminApi, newValidationId)
+                        if (stateBefore.issued === stateAfter.issued) {
+                            debug('issue tokens error', 'same state after issue')
+                            issueResult = false
+                        }
+                        if (issueResult) {
                             success = 1
                             break
                         }
@@ -222,14 +239,14 @@ const approveAndPrepare = async (AdminApi, newValidationId) => {
         await new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve()
-            }, delay)
+            }, delay * 2)
         })
         const txIdPreIssue = await preIssue(AdminApi, newValidationId)
         if (txIdApprove && txIdPreIssue) {
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, delay)
+                }, delay * 2)
             })
             debug('approved and prepared')
             return true
@@ -274,9 +291,13 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, delay)
+                }, delay * 2)
             })
             debug('approveAndIssue success try payout')
+            const state = await getIssueState(AdminApi, newValidation.id)
+            if (state.state !== 2) {
+                debug('cant payout 1 wrong state', state)
+            }
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
                 updateValidationState(newValidation.id, 'finished')
@@ -306,8 +327,12 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, delay)
+                }, delay * 2)
             })
+            const state = await getIssueState(AdminApi, newValidation.id)
+            if (state.state !== 2) {
+                debug('cant payout 2 wrong state', state)
+            }
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
                 updateValidationState(newValidation.id, 'finished')
@@ -370,8 +395,12 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve()
-                }, delay)
+                }, delay * 2)
             })
+            const state = await getIssueState(AdminApi, newValidation.id)
+            if (state.state !== 2) {
+                debug('cant payout 3 wrong state', state)
+            }
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
                 updateValidationState(newValidation.id, 'finished')
