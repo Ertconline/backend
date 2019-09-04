@@ -31,7 +31,7 @@ const {
 const { getPoints } = require('./points')
 
 const validationStates = { waiting: 0, validated: 1, issued: 2, canceled: 3 }
-const pointsPartSize = 1000
+const pointsPartSize = 500
 const issueRetryTimes = 3
 const issueRetryWaitTime = 550
 const delay = 550
