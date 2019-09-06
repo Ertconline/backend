@@ -279,7 +279,11 @@ const methods = {
             return { error: { message: err.message, code: 7 } }
         }
     },
-    getstate: async params => {
+    getvalidation: async params => {
+        const validation = await getValidation(params.id)
+        return { result: validation }
+    },
+    getglobalstate: async params => {
         const AdminApi = createApi(config.eos.adminKeyProvider)
         const state = await getIssueState(AdminApi, params.id)
         return { result: state }
