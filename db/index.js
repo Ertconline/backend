@@ -109,6 +109,16 @@ const getKeys = async uid => {
     return user && user.keys
 }
 
+const getValidationErrors = async vid => {
+    const errors = await db.findOne('errors', { vid }, { limit: 1, sort: { date: -1 } })
+    return errors
+}
+const addValidationError = async (vid, error) => {
+    const date = new Date()
+    const errors = await db.insert('errors', { vid, error, date })
+    return errors
+}
+
 module.exports = {
     getUser,
     saveUser,
@@ -124,4 +134,6 @@ module.exports = {
     checkPoints,
     removeValidation,
     updateValidationState,
+    getValidationErrors,
+    addValidationError,
 }

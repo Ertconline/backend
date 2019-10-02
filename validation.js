@@ -17,6 +17,7 @@ const {
     unfinishTask,
     checkPoints,
     updateValidationState,
+    addValidationError,
 } = require('./db')
 const {
     validateCoordsFormat,
@@ -297,13 +298,15 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             const state = await getIssueState(AdminApi, newValidation.id)
             if (state.state !== 2) {
                 debug('cant payout 1 wrong state', state)
-            }
-            const payoutState = await payout(AdminApi, newValidation.id)
-            if (payoutState) {
-                updateValidationState(newValidation.id, 'finished')
-                return { result: true }
+            } else {
+                const payoutState = await payout(AdminApi, newValidation.id)
+                if (payoutState) {
+                    await updateValidationState(newValidation.id, 'finished')
+                    return { result: true }
+                }
             }
         } else if (result) {
+            await addValidationError(newValidation.id, result)
             return result
         }
     } else if (bcValidation.state === validationStates.validated) {
@@ -318,6 +321,9 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
                 })
             } else {
                 debug('cant make preissue')
+                await addValidationError(newValidation.id, {
+                    error: { message: 'internal error, try again later', code: 7 },
+                })
                 return { error: { message: 'internal error, try again later', code: 7 } }
             }
         }
@@ -332,18 +338,27 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             const state = await getIssueState(AdminApi, newValidation.id)
             if (state.state !== 2) {
                 debug('cant payout 2 wrong state', state)
-            }
-            const payoutState = await payout(AdminApi, newValidation.id)
-            if (payoutState) {
-                updateValidationState(newValidation.id, 'finished')
-                return { result: true }
+            } else {
+                const payoutState = await payout(AdminApi, newValidation.id)
+                if (payoutState) {
+                    await updateValidationState(newValidation.id, 'finished')
+                    return { result: true }
+                }
             }
         } else if (result) {
+            debug('cant issue tokens')
+            await addValidationError(newValidation.id, result)
             return result
         }
     } else if (bcValidation.state === validationStates.issued) {
         return { result: true }
     } else if (bcValidation.state === validationStates.canceled) {
+        await addValidationError(newValidation.id, {
+            error: {
+                message: 'Validation canceled',
+                code: 15,
+            },
+        })
         return {
             error: {
                 message: 'Validation canceled',
@@ -362,6 +377,9 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             const points = getPoints(coordsArray, newValidation.amount)
 
             if (!points.length) {
+                await addValidationError(newValidation.id, {
+                    error: { message: 'cant create points', code: 11 },
+                })
                 return { error: { message: 'cant create points', code: 11 } }
             }
             debug('start prepare points')
@@ -371,6 +389,9 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             const check = await checkPoints(preparedPoints)
             if (!check) {
                 debug('not unique', { check })
+                await addValidationError(newValidation.id, {
+                    error: { message: 'not unique coordinates', code: 12 },
+                })
                 return { error: { message: 'not unique coordinates', code: 12 } }
             }
             await savePreparedPoints(newValidation.id, preparedPoints)
@@ -381,6 +402,9 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
         debug('bc validation not found', newValidation)
         const valTxId = await createValidation(api, newValidation)
         if (!valTxId) {
+            await addValidationError(newValidation.id, {
+                error: { message: 'internal error, try again later', code: 7 },
+            })
             return { error: { message: 'internal error, try again later', code: 7 } }
         }
         debug('bc validation created', newValidation)
@@ -403,20 +427,22 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             }
             const payoutState = await payout(AdminApi, newValidation.id)
             if (payoutState) {
-                updateValidationState(newValidation.id, 'finished')
+                await updateValidationState(newValidation.id, 'finished')
                 debug('payout success')
                 return { result: true }
             }
         } else if (result) {
+            await addValidationError(newValidation.id, result)
             return result
         }
     } catch (err) {
         debug('validation error', err)
         const bcErrorMsg = bcError(err)
         if (bcErrorMsg) {
+            await addValidationError(newValidation.id, bcErrorMsg)
             return bcErrorMsg
         }
-
+        await addValidationError(newValidation.id, { error: { message: err.message, code: 7 } })
         return { error: { message: err.message, code: 7 } }
     }
 }

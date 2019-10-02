@@ -18,10 +18,171 @@ const {
     getValidationById,
     removeValidation,
     updateValidationState,
+    getValidationErrors,
 } = require('./db')
 const config = require('./config')
 const { prepareCoords, debug, bcError } = require('./utils')
 const { isSameAmount, isValid, checkCurrentValidationState, validation, validationStates } = require('./validation')
+
+const prepare = async params => {
+    const keys = await getKeys(params.uid)
+    if (!keys) {
+        return { error: { message: 'Invalid uid', code: 4 } }
+    }
+    const api = createApi(keys.privateKey)
+    const AdminApi = createApi(config.eos.adminKeyProvider)
+    const vid = params.validNum
+    const waitRetry = 3
+    let newValidation = await getValidationById(vid)
+    if (!newValidation) {
+        newValidation = {
+            coords: prepareCoords(params.coords),
+            amount: parseInt(params.amount),
+            creator: params.uid,
+            id: vid + '',
+        }
+        await saveValidation(newValidation, params)
+        await updateValidationState(vid, 'new')
+    } else {
+        if (newValidation.state === 'new' && !newValidation.expired) {
+            return { error: { message: 'still in progress', code: 18 } }
+        }
+        newValidation = newValidation.data
+    }
+
+    const bcValidation = await getValidation(newValidation.id)
+
+    if (bcValidation) {
+        if (bcValidation.state === validationStates.issued) {
+            return { result: true }
+        } else if (bcValidation && bcValidation.state === validationStates.canceled) {
+            await updateValidationState(vid, 'canceled')
+            return {
+                error: {
+                    message: 'Validation canceled',
+                    code: 15,
+                },
+            }
+        }
+        const isSameAmountValidation = isSameAmount(bcValidation, newValidation)
+        if (isSameAmountValidation !== true) {
+            await updateValidationState(vid, 'error')
+            return isSameAmountValidation
+        }
+    }
+
+    let state = await checkCurrentValidationState(AdminApi, newValidation)
+    debug('current state', { state })
+    if (state.currentFinished) {
+        debug('state: currentFinished')
+        if (state.bcState !== validationStates.issued && state.bcState !== validationStates.canceled) {
+            await payout(AdminApi, state.id)
+            await updateValidationState(vid, 'finished')
+            return { result: true }
+        }
+
+        return { result: true }
+    }
+
+    return { state, waitRetry, AdminApi, newValidation, bcValidation, api }
+}
+
+const currentInProgress = async (state, waitRetry, AdminApi, newValidation, bcValidation, params, api) => {
+    debug('state: currentInProgress')
+    for (let i = 0; i <= waitRetry; i++) {
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve()
+            }, state.estimate)
+        })
+        debug('time to check state')
+        state = await checkCurrentValidationState(AdminApi, newValidation)
+        debug('current state after wait', { state })
+        if (state.currentFinished) {
+            if (
+                state.currentFinished &&
+                state.bcState !== validationStates.issued &&
+                state.bcState !== validationStates.canceled
+            ) {
+                await payout(AdminApi, state.id)
+                await updateValidationState(state.id, 'finished')
+                return { result: true }
+            }
+        }
+        if (state.currentUnfinished) {
+            return validation(bcValidation, newValidation, params, api, AdminApi)
+        }
+    }
+}
+
+const otherInProgress = async (state, waitRetry, AdminApi, newValidation, bcValidation, params, api) => {
+    debug('state: otherInProgress')
+    for (let i = 0; i <= waitRetry; i++) {
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve()
+            }, state.estimate)
+        })
+        debug('time to check state')
+        state = await checkCurrentValidationState(AdminApi, newValidation)
+        debug('current state after wait', { state })
+        if (state.currentUnfinished || state.otherFinished) {
+            if (
+                state.otherFinished &&
+                state.bcState !== validationStates.issued &&
+                state.bcState !== validationStates.canceled
+            ) {
+                await payout(AdminApi, state.id)
+                await updateValidationState(state.id, 'finished')
+            }
+
+            return validation(bcValidation, newValidation, params, api, AdminApi)
+        }
+    }
+}
+
+const currentUnfinished = async (state, AdminApi, newValidation, bcValidation, params, api) => {
+    if (
+        state.otherFinished &&
+        state.bcState !== validationStates.issued &&
+        state.bcState !== validationStates.canceled
+    ) {
+        await payout(AdminApi, state.id)
+        await updateValidationState(state.id, 'finished')
+    }
+    debug('state: currentUnfinished || otherFinished')
+    return validation(bcValidation, newValidation, params, api, AdminApi)
+}
+
+const otherUnfinished = async (state, AdminApi, newValidation, bcValidation, params, api) => {
+    debug('state: otherUnfinished')
+    // procces other
+    const bcOtherValidation = await getValidation(state.id)
+    let otherValidation = await getValidationById(state.id)
+    debug('validations:', { bcOtherValidation, otherValidation })
+    if (!otherValidation) {
+        return { error: { message: 'Other invalid validation', code: 17 } }
+    }
+    const keys = await getKeys(otherValidation.params.uid)
+    if (!keys) {
+        return { error: { message: 'Other invalid uid', code: 16 } }
+    }
+    await updateValidationState(state.id, 'new')
+    const secondApi = createApi(keys.privateKey)
+    const result = await validation(
+        bcOtherValidation,
+        otherValidation.data,
+        otherValidation.params,
+        secondApi,
+        AdminApi,
+    )
+    if (result.error) {
+        debug('cant validate other', { otherValidation, result })
+        return { error: { message: 'internal error, try again later', code: 7 } }
+    } else {
+        return validation(bcValidation, newValidation, params, api, AdminApi)
+    }
+}
 
 const methods = {
     createNewUser: async params => {
@@ -59,158 +220,65 @@ const methods = {
             return isValidParams
         }
         try {
-            const keys = await getKeys(params.uid)
-            if (!keys) {
-                return { error: { message: 'Invalid uid', code: 4 } }
+            const pack = await prepare(params)
+            if (!pack.api) {
+                return pack
             }
-            const api = createApi(keys.privateKey)
-            const AdminApi = createApi(config.eos.adminKeyProvider)
-            const vid = params.validNum
-            let newValidation = await getValidationById(vid)
-            if (!newValidation) {
-                newValidation = {
-                    coords: prepareCoords(params.coords),
-                    amount: parseInt(params.amount),
-                    creator: params.uid,
-                    id: vid + '',
-                }
-                await saveValidation(newValidation, params)
-                updateValidationState(vid, 'new')
-            } else {
-                if (newValidation.state === 'new' && !newValidation.expired) {
-                    return { error: { message: 'still in progress', code: 18 } }
-                }
-                newValidation = newValidation.data
-            }
-
-            const bcValidation = await getValidation(newValidation.id)
-
-            if (bcValidation) {
-                if (bcValidation.state === validationStates.issued) {
-                    return { result: true }
-                } else if (bcValidation && bcValidation.state === validationStates.canceled) {
-                    updateValidationState(vid, 'canceled')
-                    return {
-                        error: {
-                            message: 'Validation canceled',
-                            code: 15,
-                        },
-                    }
-                }
-                const isSameAmountValidation = isSameAmount(bcValidation, newValidation)
-                if (isSameAmountValidation !== true) {
-                    updateValidationState(vid, 'error')
-                    return isSameAmountValidation
-                }
-            }
-
-            const waitRetry = 3
-            let state = await checkCurrentValidationState(AdminApi, newValidation)
-            debug('current state', { state })
-            if (state.currentFinished) {
-                debug('state: currentFinished')
-                if (state.bcState !== validationStates.issued && state.bcState !== validationStates.canceled) {
-                    await payout(AdminApi, state.id)
-                    updateValidationState(vid, 'finished')
-                    return { result: true }
-                }
-
-                return { result: true }
-            }
+            const { state, waitRetry, AdminApi, newValidation, bcValidation, api } = pack
             if (state.currentInProgress) {
-                // wait
-                debug('state: currentInProgress')
-                for (let i = 0; i <= waitRetry; i++) {
-                    await new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            resolve()
-                        }, state.estimate)
-                    })
-                    debug('time to check state')
-                    state = await checkCurrentValidationState(AdminApi, newValidation)
-                    debug('current state after wait', { state })
-                    if (state.currentFinished) {
-                        if (
-                            state.currentFinished &&
-                            state.bcState !== validationStates.issued &&
-                            state.bcState !== validationStates.canceled
-                        ) {
-                            await payout(AdminApi, state.id)
-                            updateValidationState(state.id, 'finished')
-                            return { result: true }
-                        }
-                    }
-                    if (state.currentUnfinished) {
-                        return validation(bcValidation, newValidation, params, api, AdminApi)
-                    }
-                }
+                return currentInProgress(state, waitRetry, AdminApi, newValidation, bcValidation, params, api)
             }
             if (state.otherInProgress) {
                 // wait
-                debug('state: otherInProgress')
-                for (let i = 0; i <= waitRetry; i++) {
-                    await new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            resolve()
-                        }, state.estimate)
-                    })
-                    debug('time to check state')
-                    state = await checkCurrentValidationState(AdminApi, newValidation)
-                    debug('current state after wait', { state })
-                    if (state.currentUnfinished || state.otherFinished) {
-                        if (
-                            state.otherFinished &&
-                            state.bcState !== validationStates.issued &&
-                            state.bcState !== validationStates.canceled
-                        ) {
-                            await payout(AdminApi, state.id)
-                            updateValidationState(state.id, 'finished')
-                        }
-
-                        return validation(bcValidation, newValidation, params, api, AdminApi)
-                    }
-                }
+                return otherInProgress(state, waitRetry, AdminApi, newValidation, bcValidation, params, api)
             }
             if (state.currentUnfinished || state.otherFinished) {
-                if (
-                    state.otherFinished &&
-                    state.bcState !== validationStates.issued &&
-                    state.bcState !== validationStates.canceled
-                ) {
-                    await payout(AdminApi, state.id)
-                    updateValidationState(state.id, 'finished')
-                }
-                debug('state: currentUnfinished || otherFinished')
-                return validation(bcValidation, newValidation, params, api, AdminApi)
+                return currentUnfinished(state, AdminApi, newValidation, bcValidation, params, api)
             }
             if (state.otherUnfinished) {
-                debug('state: otherUnfinished')
-                // procces other
-                const bcOtherValidation = await getValidation(state.id)
-                let otherValidation = await getValidationById(state.id)
-                debug('validations:', { bcOtherValidation, otherValidation })
-                if (!otherValidation) {
-                    return { error: { message: 'Other invalid validation', code: 17 } }
-                }
-                const keys = await getKeys(otherValidation.params.uid)
-                if (!keys) {
-                    return { error: { message: 'Other invalid uid', code: 16 } }
-                }
-                updateValidationState(state.id, 'new')
-                const secondApi = createApi(keys.privateKey)
-                const result = await validation(
-                    bcOtherValidation,
-                    otherValidation.data,
-                    otherValidation.params,
-                    secondApi,
-                    AdminApi,
-                )
-                if (result.error) {
-                    debug('cant validate other', { otherValidation, result })
-                    return { error: { message: 'internal error, try again later', code: 7 } }
-                } else {
-                    return validation(bcValidation, newValidation, params, api, AdminApi)
-                }
+                return otherUnfinished(state, AdminApi, newValidation, bcValidation, params, api)
+            }
+            debug('cant exit from state', { state })
+            return { error: { message: 'internal error, try again later', code: 7 } }
+        } catch (err) {
+            debug('create validation error', err)
+            const bcErrorMsg = bcError(err)
+            if (bcErrorMsg) {
+                return bcErrorMsg
+            }
+
+            return { error: { message: err.message, code: 7 } }
+        }
+    },
+    validateAsync: async params => {
+        const isValidParams = isValid(params)
+
+        if (isValidParams !== true) {
+            return isValidParams
+        }
+        try {
+            const pack = await prepare(params)
+            if (!pack.api) {
+                return pack
+            }
+            const { state, waitRetry, AdminApi, newValidation, bcValidation, api } = pack
+            if (state.currentInProgress) {
+                // wait
+                currentInProgress(state, waitRetry, AdminApi, newValidation, bcValidation, params, api)
+                return { result: true }
+            }
+            if (state.otherInProgress) {
+                // wait
+                otherInProgress(state, waitRetry, AdminApi, newValidation, bcValidation, params, api)
+                return { result: true }
+            }
+            if (state.currentUnfinished || state.otherFinished) {
+                currentUnfinished(state, AdminApi, newValidation, bcValidation, params, api)
+                return { result: true }
+            }
+            if (state.otherUnfinished) {
+                otherUnfinished(state, AdminApi, newValidation, bcValidation, params, api)
+                return { result: true }
             }
             debug('cant exit from state', { state })
             return { error: { message: 'internal error, try again later', code: 7 } }
@@ -281,7 +349,8 @@ const methods = {
     },
     getvalidation: async params => {
         const validation = await getValidation(params.id)
-        return { result: validation }
+        const errors = await getValidationErrors(params.id)
+        return { result: { validation, errors } }
     },
     getglobalstate: async params => {
         const AdminApi = createApi(config.eos.adminKeyProvider)
