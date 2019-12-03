@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "6684ac18-d79c-448f-8824-6daac1655788",
+		"_postman_id": "bf297862-9a38-4725-88b0-01d4317897b1",
 		"name": "ertc",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -20,15 +20,11 @@
 					"raw": "{\"method\": \"createNewUser\", \"params\": {\"email\": \"user9@gmail.com\"}}"
 				},
 				"url": {
-					"raw": "http://95.214.63.254:3100/api",
+					"raw": "http://{{host}}/api",
 					"protocol": "http",
 					"host": [
-						"95",
-						"214",
-						"63",
-						"254"
+						"{{host}}"
 					],
-					"port": "3100",
 					"path": [
 						"api"
 					]
@@ -51,15 +47,11 @@
 					"raw": "{\n\t\"method\": \"validate\",\n\t\"params\": {\n\"coords\": [\n       {\"x\": \"-84.539487\", \"y\": \"138.072916\"},\n        {\"x\": \"-84.498816\", \"y\": \"18.060791\"},\n        {\"x\": \"-84.472941\", \"y\": \"18.022564\"},\n        {\"x\": \"-84.512283\", \"y\": \"123.018918\"}\n],\n\"amount\": \"15\",\n\"uid\": \"e.1yqmuzx45m\",\n\"validNum\": \"12246\",\n\"validDate\": \"01-12-19 10:30\"\n}\n}\n"
 				},
 				"url": {
-					"raw": "http://95.214.63.254:3100/api",
+					"raw": "http://{{host}}/api",
 					"protocol": "http",
 					"host": [
-						"95",
-						"214",
-						"63",
-						"254"
+						"{{host}}"
 					],
-					"port": "3100",
 					"path": [
 						"api"
 					]
@@ -79,18 +71,14 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"method\": \"getBalance\", \"params\": {\"uid\": \"e.1yqmuzx45m\"}}"
+					"raw": "{\"method\": \"getBalance\", \"params\": {\"uid\": \"e.knse5xb5xz\"}}"
 				},
 				"url": {
-					"raw": "http://95.214.63.254:3100/api",
+					"raw": "http://{{host}}/api",
 					"protocol": "http",
 					"host": [
-						"95",
-						"214",
-						"63",
-						"254"
+						"{{host}}"
 					],
-					"port": "3100",
 					"path": [
 						"api"
 					]
@@ -113,15 +101,11 @@
 					"raw": "{\n\t\"method\": \"transfer\",\n\t\"params\": {\n\"amount\": \"1\",\n\"fromUid\": \"e.1yqmuzx45m\",\n\"toUid\": \"faucet\"\n}\n}\n"
 				},
 				"url": {
-					"raw": "http://95.214.63.254:3100/api",
+					"raw": "http://{{host}}/api",
 					"protocol": "http",
 					"host": [
-						"95",
-						"214",
-						"63",
-						"254"
+						"{{host}}"
 					],
-					"port": "3100",
 					"path": [
 						"api"
 					]
@@ -143,18 +127,95 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"method\": \"cancel\", \"params\": {\"id\": \"1228832\"}}"
+					"raw": "{\"method\": \"cancel\", \"params\": {\"id\": \"100000000405\"}}"
 				},
 				"url": {
-					"raw": "http://127.0.0.1:3100/api",
+					"raw": "http://{{host}}/api",
 					"protocol": "http",
 					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
+						"{{host}}"
 					],
-					"port": "3100",
+					"path": [
+						"api"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get state",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"method\": \"getglobalstate\", \"params\": []}"
+				},
+				"url": {
+					"raw": "http://{{host}}/api",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reinstate",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"method\": \"reinstate\", \"params\": {\"id\": \"100000000405\"}}"
+				},
+				"url": {
+					"raw": "http://{{host}}/api",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get validation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"method\": \"getvalidation\", \"params\": {\"id\": \"100000000488\"}}"
+				},
+				"url": {
+					"raw": "http://{{host}}/api",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
 					"path": [
 						"api"
 					]
@@ -162,5 +223,6 @@
 			},
 			"response": []
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }
