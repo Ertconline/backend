@@ -9,6 +9,7 @@ const {
     cancel,
     getIssueState,
     reInState,
+    getTokensByUser,
 } = require('./crypto')
 const {
     getUser,
@@ -361,6 +362,16 @@ const methods = {
         const AdminApi = createApi(config.eos.adminKeyProvider)
         const state = await reInState(AdminApi, params.id)
         return { result: state }
+    },
+    gettokens: async params => {
+        if (!params.uid || !params.limit || (params.skip !== 0 && !params.skip)) {
+            return { error: { message: 'All params required', code: 5 } }
+        }
+        if (params.limit > 100 || params.limit < 1) {
+            return { error: { message: 'limit must be between 1 and 100', code: 19 } }
+        }
+        const tokens = await getTokensByUser(params.uid, params.skip, params.limit)
+        return { result: tokens }
     },
 }
 
