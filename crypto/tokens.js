@@ -23,15 +23,18 @@ const getTokensByUser = async (uid, skip, limit) => {
     let skipped = 0
     let fullfiled = 0
     for (const range of ranges) {
-        if (fullfiled === limit) {
+        if (fullfiled >= limit) {
             break
         }
         if (skipped + range.count < skip) {
             skipped += range.count
-            return 1
+            continue
         }
-        let left = limit - fullfiled
-        let rawTokens = await getTokensByIds(range.first, left > range.count ? range.second : range.first + left)
+        const needToSkip = skip - skipped
+        const left = limit - fullfiled - 1
+        const start = range.first + needToSkip
+        const end = left + needToSkip > range.count ? range.second : range.first + needToSkip + left
+        const rawTokens = await getTokensByIds(start, end)
         fullfiled += rawTokens.length
         tokens.push(...rawTokens)
     }

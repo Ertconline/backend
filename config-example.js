@@ -16,5 +16,6 @@ module.exports = {
         port: 3100,
         faucetName: 'faucet',
     },
+    pointsPartSize: 10,
     ips: ['127.0.0.1'],
 }
