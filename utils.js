@@ -155,6 +155,13 @@ const bcError = err => {
     }
 }
 
+const formatCoordFromBC = row => {
+    const newRow = Object.assign(row, {})
+    newRow.coords.latitude = (newRow.coords.latitude / Math.pow(10, 8)).toFixed(8)
+    newRow.coords.longitude = (newRow.coords.longitude / Math.pow(10, 8)).toFixed(8)
+    return newRow
+}
+
 module.exports = {
     parseTokenString,
     generateName,
@@ -169,4 +176,5 @@ module.exports = {
     chunk,
     bcError,
     shiftChunk,
+    formatCoordFromBC,
 }

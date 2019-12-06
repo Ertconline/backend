@@ -1,5 +1,5 @@
 const { rpc } = require('./cryptoApi')
-const { debug } = require('../utils')
+const { debug, formatCoordFromBC } = require('../utils')
 
 const getTokensByUser = async (uid, skip, limit) => {
     const req = {
@@ -36,7 +36,7 @@ const getTokensByUser = async (uid, skip, limit) => {
         const end = left + needToSkip > range.count ? range.second : range.first + needToSkip + left
         const rawTokens = await getTokensByIds(start, end)
         fullfiled += rawTokens.length
-        tokens.push(...rawTokens)
+        tokens.push(...rawTokens.map(token => formatCoordFromBC(token)))
     }
 
     return { skip, limit, total, tokens }
