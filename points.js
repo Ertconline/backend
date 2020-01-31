@@ -4,6 +4,8 @@ const util = require('util')
 const config = require('./config')
 util.inspect.defaultOptions.depth = null
 
+// берем координаты строим квадрат вокруг, нарезаем на квадраты поменьше и возвращаем центральные точки этих кадратов,
+// если не хватает докидываем оригинальных координат
 const getPoints = (originalCoords, pointsCount, precision = 12) => {
     if (config.debug) {
         console.log('getPoints input', { originalCoords, pointsCount, precision })

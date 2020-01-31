@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "bf297862-9a38-4725-88b0-01d4317897b1",
+		"_postman_id": "f797ab05-6542-4857-98f1-72639dc73737",
 		"name": "ertc",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -209,6 +209,33 @@
 				"body": {
 					"mode": "raw",
 					"raw": "{\"method\": \"getvalidation\", \"params\": {\"id\": \"100000000488\"}}"
+				},
+				"url": {
+					"raw": "http://{{host}}/api",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"api"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get tokens",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"method\": \"gettokens\", \"params\": {\"uid\": \"ertc.fund\", \"limit\":20, \"skip\": 3995}}"
 				},
 				"url": {
 					"raw": "http://{{host}}/api",

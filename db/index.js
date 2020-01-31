@@ -1,5 +1,6 @@
 const { db } = require('../dbManager')
 const { debug, chunk } = require('../utils')
+const config = require('../config')
 const crypto = require('crypto')
 const secret = 'youShallNotPass'
 
@@ -17,7 +18,7 @@ const getPreparedPoints = async vid => {
     return points.map(pt => ({ latitude: pt.latitude, longitude: pt.longitude }))
 }
 
-const pointsPartSize = 100
+const pointsPartSize = config.pointsPartSize
 
 const checkPoints = async points => {
     const chunks = chunk(points, pointsPartSize)

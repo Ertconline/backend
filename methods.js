@@ -373,6 +373,9 @@ const methods = {
         if (params.limit > 100 || params.limit < 1) {
             return { error: { message: 'limit must be between 1 and 100', code: 19 } }
         }
+        if (params.skip < 0) {
+            return { error: { message: 'skip must be greater or equal than 0', code: 20 } }
+        }
         const tokens = await getTokensByUser(params.uid, params.skip, params.limit)
         return { result: tokens }
     },
