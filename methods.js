@@ -349,7 +349,10 @@ const methods = {
         }
     },
     getvalidation: async params => {
-        const validation = await getValidation(params.id)
+        let validation = await getValidation(params.id)
+        if (!validation) {
+            validation = await getValidationById(params.id)
+        }
         const errors = await getValidationErrors(params.id)
         return { result: { validation, errors } }
     },
