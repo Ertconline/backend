@@ -349,12 +349,12 @@ const methods = {
         }
     },
     getvalidation: async params => {
-        let validation = await getValidation(params.id)
-        if (!validation) {
-            validation = await getValidationById(params.id)
-        }
+        const validation = await getValidation(params.id)
+        // if (!validation) {
+        const insideValidation = await getValidationById(params.id)
+        // }
         const errors = await getValidationErrors(params.id)
-        return { result: { validation, errors } }
+        return { result: { validation, insideValidation, errors } }
     },
     getglobalstate: async params => {
         const AdminApi = createApi(config.eos.adminKeyProvider)
