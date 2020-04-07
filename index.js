@@ -27,7 +27,7 @@ app.post('/api', async (req, res) => {
 
     const result = await methods[method](params)
 
-    if (result.error) {
+    if (result && result.error) {
         return sendError(res, result.error)
     }
 

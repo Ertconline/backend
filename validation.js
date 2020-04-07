@@ -276,14 +276,14 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
             await delay(delayTime * 2)
             debug('approveAndIssue success try payout')
             const state = await getIssueState(AdminApi, newValidation.id)
-            if (state.state !== 2) {
-                debug('cant payout 1 wrong state', state)
-            } else {
+            if (state.state !== validationStates.issued && state.state !== validationStates.canceled) {
                 const payoutState = await payout(AdminApi, newValidation.id)
                 if (payoutState) {
                     await updateValidationState(newValidation.id, 'finished')
                     return { result: true }
                 }
+            } else {
+                debug('cant payout 1 wrong state', state)
             }
         } else if (result) {
             await addValidationError(newValidation.id, result)
@@ -308,14 +308,14 @@ const proccessValidation = async (bcValidation, newValidation, AdminApi, prepare
         if (result && !result.error) {
             await delay(delayTime * 2)
             const state = await getIssueState(AdminApi, newValidation.id)
-            if (state.state !== 2) {
-                debug('cant payout 2 wrong state', state)
-            } else {
+            if (state.state !== validationStates.issued && state.state !== validationStates.canceled) {
                 const payoutState = await payout(AdminApi, newValidation.id)
                 if (payoutState) {
                     await updateValidationState(newValidation.id, 'finished')
                     return { result: true }
                 }
+            } else {
+                debug('cant payout 2 wrong state', state)
             }
         } else if (result) {
             debug('cant issue tokens')
@@ -386,14 +386,15 @@ const validation = async (bcValidation, newValidation, params, api, AdminApi) =>
             debug('bc validation approved and issued try payout', newValidation)
             await delay(delayTime * 2)
             const state = await getIssueState(AdminApi, newValidation.id)
-            if (state.state !== 2) {
+            if (state.state !== validationStates.issued && state.state !== validationStates.canceled) {
+                const payoutState = await payout(AdminApi, newValidation.id)
+                if (payoutState) {
+                    await updateValidationState(newValidation.id, 'finished')
+                    debug('payout success')
+                    return { result: true }
+                }
+            } else {
                 debug('cant payout 3 wrong state', state)
-            }
-            const payoutState = await payout(AdminApi, newValidation.id)
-            if (payoutState) {
-                await updateValidationState(newValidation.id, 'finished')
-                debug('payout success')
-                return { result: true }
             }
         } else if (result) {
             await addValidationError(newValidation.id, result)
