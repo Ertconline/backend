@@ -8,6 +8,14 @@ const onlyUnique = (value, index, self) => {
     return self.indexOf(value) === index
 }
 
+const delay = async time => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve()
+        }, time)
+    })
+}
+
 const parseTokenString = tokenString => {
     const [amountString, symbol] = tokenString.split(' ').map(t => t.trim())
     const amount = amountString
@@ -177,4 +185,5 @@ module.exports = {
     bcError,
     shiftChunk,
     formatCoordFromBC,
+    delay,
 }
