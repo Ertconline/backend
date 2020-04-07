@@ -190,10 +190,10 @@ const methods = {
         if (!params.email) {
             return { error: { message: 'Invalid email', code: 3 } }
         }
-        const user = await getUser({ email: params.email })
-        if (user) {
-            return { result: { uid: user.uid } }
-        }
+        // const user = await getUser({ email: params.email })
+        // if (user) {
+        //     return { result: { uid: user.uid } }
+        // }
 
         try {
             const keys = await createKeys()
