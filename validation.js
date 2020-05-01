@@ -37,6 +37,7 @@ const pointsPartSize = config.pointsPartSize
 const issueRetryTimes = 3
 const issueRetryWaitTime = 550
 const delayTime = 550
+const estimateTimeForOneOp = 3000
 
 const checkCurrentValidationState = async (AdminApi, currentValidation) => {
     debug('checkCurrentValidationState', { currentValidation })
@@ -133,7 +134,6 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         debug('chunks cnt: ', chunks.length)
         let j = 0
         const estimateOps = chunks.length - Math.ceil(state.issued / pointsPartSize)
-        const estimateTimeForOneOp = 300
         const estimate = estimateOps * estimateTimeForOneOp * (issueRetryTimes + 1) // in ms
         const currentTime = new Date().getTime()
         const task = {
@@ -258,6 +258,7 @@ const approveAndIssue = async (AdminApi, newValidationId, preparedPoints) => {
 
         return issueTokensLoop(AdminApi, newValidationId, preparedPoints)
     } else {
+        debug('validation not approved')
         return {
             error: {
                 message: 'internal error, try again later',
