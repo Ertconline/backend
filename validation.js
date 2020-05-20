@@ -118,6 +118,14 @@ const checkCurrentValidationState = async (AdminApi, currentValidation) => {
     return state
 }
 
+const taskCheck = async task => {
+    const currentTime = new Date().getTime()
+    if (task.endTime - 1000 <= currentTime) {
+        task.endTime = task.endTime + (issueRetryWaitTime * 7 * issueRetryTimes + 1)
+        await saveOrUpdateTask(task)
+    }
+}
+
 const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
     debug('start issueTokensLoop')
     try {
@@ -128,13 +136,14 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         const issued = isSameState ? state.issued : 0
         if (isSameState && state.issued === cnt) {
             debug('all  issued')
+            await finishTask(newValidationId)
             return { result: true }
         }
         const chunks = chunk(preparedPoints, pointsPartSize)
         debug('chunks cnt: ', chunks.length)
         let j = 0
-        const estimateOps = chunks.length - Math.ceil(state.issued / pointsPartSize)
-        const estimate = Math.abs(estimateOps * estimateTimeForOneOp * (issueRetryTimes + 1)) // in ms
+        const estimateOps = Math.abs(chunks.length - Math.ceil(state.issued / pointsPartSize))
+        const estimate = Math.abs(estimateOps * estimateTimeForOneOp * (issueRetryWaitTime * 7 * issueRetryTimes + 1)) // in ms
         const currentTime = new Date().getTime()
         const task = {
             id: newValidationId,
@@ -149,6 +158,7 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
                 j++
                 continue
             }
+            await taskCheck(task)
             debug('try issue chunk: ', j)
             let issueResult
             let shift = 0
@@ -174,11 +184,13 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
                 j++
                 continue
             } else {
+                await taskCheck(task)
                 debug('try again issue chunk: ', j)
                 let success = 0
                 for (let i = 0; i <= issueRetryTimes; i++) {
                     debug('try again issue chunk, retry: ', i)
                     await delay(issueRetryWaitTime)
+                    await taskCheck(task)
                     try {
                         if (shift) {
                             chunk = shiftChunk(chunk)
@@ -205,6 +217,7 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
                         return { error: { message: err.message, code: 7 } }
                     }
                 }
+                await taskCheck(task)
                 if (!success) {
                     debug('try again issue chunk failed', j)
                     globalSuccess = 0
@@ -213,6 +226,7 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
                 }
             }
             j++
+            await taskCheck(task)
         }
         if (globalSuccess) {
             await finishTask(newValidationId)
