@@ -134,7 +134,7 @@ const issueTokensLoop = async (AdminApi, newValidationId, preparedPoints) => {
         debug('chunks cnt: ', chunks.length)
         let j = 0
         const estimateOps = chunks.length - Math.ceil(state.issued / pointsPartSize)
-        const estimate = estimateOps * estimateTimeForOneOp * (issueRetryTimes + 1) // in ms
+        const estimate = Math.abs(estimateOps * estimateTimeForOneOp * (issueRetryTimes + 1)) // in ms
         const currentTime = new Date().getTime()
         const task = {
             id: newValidationId,
