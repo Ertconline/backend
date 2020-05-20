@@ -57,8 +57,8 @@ const savePreparedPoints = async (vid, data) => {
 const getValidationById = async id => {
     const validation = await db.findOne('validations', { id })
     if (validation) {
-        const currentTime = new Date().getTime()
-        validation.expired = currentTime > validation.time + 1800000
+        const task = await getTaskById(id)
+        validation.expired = task.expired
     }
 
     return validation
@@ -81,8 +81,12 @@ const removeValidation = async id => {
 const getTaskById = async id => {
     const task = await db.findOne('tasks', { id })
     if (task) {
-        const currentTime = new Date().getTime()
-        task.expired = currentTime > task.endTime
+        if (task.finished) {
+            task.expired = true
+        } else {
+            const currentTime = new Date().getTime()
+            task.expired = currentTime > task.endTime
+        }
     }
 
     return task

@@ -85,10 +85,10 @@ const checkCurrentValidationState = async (AdminApi, currentValidation) => {
             state.currentFinished = true // mb need payout?
             return state
         }
-        if (task && task.expired) {
-            state.currentUnfinished = true
-        } else if (task && task.finished) {
+        if (task && task.finished) {
             state.currentFinished = true
+        } else if (task && task.expired) {
+            state.currentUnfinished = true
         } else if (task && task.unfinished) {
             state.currentUnfinished = true
         } else if (task) {
@@ -102,10 +102,10 @@ const checkCurrentValidationState = async (AdminApi, currentValidation) => {
             state.otherFinished = true // mb need payout?
             return state
         }
-        if (task && task.expired) {
-            state.otherUnfinished = true
-        } else if (task && task.finished) {
+        if (task && task.finished) {
             state.otherFinished = true
+        } else if (task && task.expired) {
+            state.otherUnfinished = true
         } else if (task && task.unfinished) {
             state.otherUnfinished = true
         } else if (task) {
