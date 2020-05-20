@@ -31,7 +31,7 @@ app.post('/api', async (req, res) => {
         return sendError(res, result.error)
     }
 
-    return sendResult(res, result.result)
+    return sendResult(res, result ? result.result : null)
 })
 
 app.use((err, req, res, next) => {
