@@ -15,7 +15,7 @@ let clientIp = function(req, res) {
 }
 
 if (config.ips && config.ips.length) {
-    app.use(ipfilter(config.ips, { id: clientIp, mode: 'allow' }))
+    app.use(ipfilter(config.ips, { detectIp: clientIp, mode: 'allow' }))
 }
 
 app.use(bodyParser.json())
