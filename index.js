@@ -9,9 +9,15 @@ const { methods } = require('./methods')
 const { db } = require('./dbManager')
 
 const app = express()
-if (config.ips && config.ips.length) {
-    app.use(ipfilter(config.ips, { mode: 'allow' }))
+
+let clientIp = function(req, res) {
+    return req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0] : ''
 }
+
+if (config.ips && config.ips.length) {
+    app.use(ipfilter(config.ips, { id: clientIp, mode: 'allow' }))
+}
+
 app.use(bodyParser.json())
 
 app.post('/api', async (req, res) => {
