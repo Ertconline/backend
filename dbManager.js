@@ -341,8 +341,8 @@ class DBManager {
     async checkAuth() {
         try {
             await this.connect()
-            const result = await this.find('users', {})
-            return result ? !!result.length : false
+            const result = await this.count('users', {})
+            return result ? !!result : false
         } catch (err) {
             console.log('checkAuth', err)
         }

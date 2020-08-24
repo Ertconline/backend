@@ -5,7 +5,7 @@ module.exports = {
         port: '27017',
         username: 'admin',
         password: 'admin',
-        options: 'test?authSource=ertc&gssapiServiceName=mongodb',
+        options: 'test?authSource=ertc&gssapiServiceName=mongodb&readPreference=secondaryPreferred',
         name: 'ertc',
         collections: {},
     },
