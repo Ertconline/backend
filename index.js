@@ -15,8 +15,15 @@ if (config.ips && config.ips.length) {
 app.use(bodyParser.json())
 
 app.post('/api', async (req, res) => {
+    const isPrimary = await db.isPrimary()
+    debug('isPrimary:', isPrimary)
     const { method, params } = req.body
     debug('request', req.body)
+
+    if (!isPrimary) {
+        return sendError(res, { message: 'instance not primary, use another one', code: 0 })
+    }
+
     if (!methods[method]) {
         return sendError(res, { message: 'Invalid method', code: 1 })
     }
@@ -43,7 +50,8 @@ app.use((err, req, res, next) => {
     }
 })
 
-db.connect().then(() => {
+db.connect().then(async () => {
+    await db.isPrimary()
     const server = http.createServer(app)
     server.setTimeout(1800000)
     server.listen(config.api.port, config.api.ip)
