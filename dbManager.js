@@ -327,7 +327,6 @@ class DBManager {
         try {
             await this.connect()
             const result = await this.db.command({ isMaster: 1 })
-            console.log('instance type, isMaster: ', result.ismaster)
             return result.ismaster
         } catch (err) {
             console.log('find', err)

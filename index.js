@@ -11,7 +11,10 @@ const { db } = require('./dbManager')
 const app = express()
 
 let clientIp = function(req, res) {
-    return req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0] : ''
+    const proxyAddr = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0] : null
+    const reqAddress = req.connection.remoteAddress || req.ip
+
+    return proxyAddr || reqAddress
 }
 
 if (config.ips && config.ips.length) {
