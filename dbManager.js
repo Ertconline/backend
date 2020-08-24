@@ -5,7 +5,10 @@ const MongoClient = require('mongodb').MongoClient
 
 class DBManager {
     constructor() {
-        this.url = config.db.url
+        const creds = config.db.username
+            ? `${encodeURIComponent(config.db.username)}:${encodeURIComponent(config.db.password)}@`
+            : ''
+        this.url = `mongodb://${creds}${config.db.host}:${config.db.port}/${config.db.options}`
         this.name = config.db.name
         this.collections = config.db.collections
     }
@@ -49,11 +52,13 @@ class DBManager {
 
         return false
     }
-
     async connect() {
         try {
             if (!this.client) {
-                this.client = new MongoClient(this.url, { useNewUrlParser: true })
+                this.client = new MongoClient(this.url, {
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true,
+                })
                 await this.client.connect()
                 this.db = this.client.db(this.name)
             }
@@ -329,7 +334,17 @@ class DBManager {
             const result = await this.db.command({ isMaster: 1 })
             return result.ismaster
         } catch (err) {
-            console.log('find', err)
+            console.log('isPrimary', err)
+        }
+    }
+
+    async checkAuth() {
+        try {
+            await this.connect()
+            const result = await this.find('users', {})
+            return result ? !!result.length : false
+        } catch (err) {
+            console.log('checkAuth', err)
         }
     }
 }

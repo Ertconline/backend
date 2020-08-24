@@ -60,7 +60,17 @@ app.use((err, req, res, next) => {
 })
 
 db.connect().then(async () => {
-    await db.isPrimary()
+    const isPrimary = await db.isPrimary()
+    const isAuthorized = await db.checkAuth()
+    debug('isPrimary:', isPrimary)
+    debug('isAuthorized:', isAuthorized)
+
+    if (!isAuthorized) {
+        console.log('invalid db creds')
+        db.disconnect()
+        return
+    }
+
     const server = http.createServer(app)
     server.setTimeout(1800000)
     server.listen(config.api.port, config.api.ip)
