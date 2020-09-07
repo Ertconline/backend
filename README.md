@@ -6,3 +6,7 @@ set right config values
 # Start
 
 node index.js
+
+
+after npm i 
+sh replace.sh
