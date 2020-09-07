@@ -58,7 +58,9 @@ const getValidationById = async id => {
     const validation = await db.findOne('validations', { id })
     if (validation) {
         const task = await getTaskById(id)
-        validation.expired = task.expired
+        if (task) {
+            validation.expired = task.expired
+        }
     }
 
     return validation
